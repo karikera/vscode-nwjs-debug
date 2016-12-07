@@ -11,7 +11,6 @@ tsconfig.json
 tsd.json
 tslint.json
 vscode-chrome-debug.txt
-webpack.config.js
 
 out/src/**
 out/test/**

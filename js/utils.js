@@ -1,35 +1,32 @@
 
-function DebounceHelper(timeoutMs)
+class DebounceHelper
 {
-    this.timeoutMs = timeoutMs;
-}
-
-DebounceHelper.prototype.timeoutMs = 0;
-DebounceHelper.prototype.waitToken = null;
-
-DebounceHelper.prototype.wait = function(fn)
-{
-    if (!this.waitToken) {
-        this.waitToken = setTimeout(() => {
-            this.waitToken = null;
-            fn();
-        },
-            this.timeoutMs);
-    }
-};
-
-DebounceHelper.prototype.doAndCancel = function(fn)
-{
-    if (this.waitToken) {
-        clearTimeout(this.waitToken);
+    constructor(timeoutMs)
+    {
+        this.timeoutMs = timeoutMs;
         this.waitToken = null;
     }
+    wait(fn)
+    {
+        if (!this.waitToken) {
+            this.waitToken = setTimeout(() => {
+                this.waitToken = null;
+                fn();
+            },
+                this.timeoutMs);
+        }
+    }
+    doAndCancel(fn)
+    {
+        if (this.waitToken) {
+            clearTimeout(this.waitToken);
+            this.waitToken = null;
+        }
 
-    fn();
-};
+        fn();
+    }
+}
 
-var util = {
+module.exports = {
     DebounceHelper: DebounceHelper
 };
-
-module.exports = util;

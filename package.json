@@ -3,6 +3,7 @@
   "displayName": "NWJS",
   "version": "0.0.1",
   "description": "NWJS Debugger",
+  "license": "UNLICENSED",
   "author": {
     "name": "ruakr"
   },
