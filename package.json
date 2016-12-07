@@ -1,25 +1,23 @@
 {
-  "name": "debugger-for-chrome",
-  "displayName": "Debugger for Chrome",
-  "version": "2.3.2",
-  "icon": "images/icon.png",
-  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
+  "name": "nwjs",
+  "displayName": "NWJS",
+  "version": "0.0.1",
+  "description": "NWJS Debugger",
   "author": {
-    "name": "Microsoft Corporation"
+    "name": "ruakr"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-chrome-debug"
+    "url": "https://github.com/karikera/vscode-chrome-debug"
   },
-  "publisher": "msjsdiag",
-  "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
+  "publisher": "ruakr",
+  "bugs": "https://github.com/karikera/vscode-chrome-debug/issues",
   "engines": {
     "vscode": "^1.6.0"
   },
   "categories": [
     "Debuggers"
   ],
-  "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.7.2",
     "vscode-debugadapter": "^1.15.0-pre.4",
@@ -35,21 +33,7 @@
     "gulp": "^3.9.1",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
-    "ts-loader": "^1.0.0",
-    "tslint": "^3.15.1",
-    "typemoq": "^0.3.3",
-    "typescript": "^2.0.3",
-    "webpack": "^1.13.3",
-    "webpack-fail-plugin": "^1.0.5"
-  },
-  "scripts": {
-    "build": "webpack",
-    "build:test": "tsc -p test/tsconfig.json",
-    "watch": "webpack -w",
-    "watch:test": "tsc -p test/tsconfig.json -w",
-    "test": "mocha -u tdd -c 'out/test/**/*.test.js'",
-    "lint": "tslint -t verbose 'src/**/*.ts' 'test/**/*.ts'",
-    "vscode:prepublish": "gulp verify-no-linked-modules"
+    "typemoq": "^0.3.3"
   },
   "contributes": {
     "breakpoints": [
@@ -68,23 +52,22 @@
     ],
     "debuggers": [
       {
-        "type": "chrome",
-        "label": "Chrome",
-        "program": "./out/bundle.js",
+        "type": "nwjs",
+        "label": "NWjs",
+        "program": "./js/chromeDebug.js",
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "initialConfigurations": [
           {
-            "name": "Launch Chrome against localhost, with sourcemaps",
-            "type": "chrome",
+            "name": "Launch NWJS, with sourcemaps",
+            "type": "nwjs",
             "request": "launch",
-            "url": "http://localhost:8080",
             "sourceMaps": true,
             "webRoot": "${workspaceRoot}"
           },
           {
             "name": "Attach to Chrome, with sourcemaps",
-            "type": "chrome",
+            "type": "nwjs",
             "request": "attach",
             "port": 9222,
             "sourceMaps": true,
@@ -92,33 +75,13 @@
           }
         ],
         "configurationAttributes": {
-          "launch": {
+          "launch_nwjs": {
             "required": [],
             "properties": {
               "port": {
                 "type": "number",
-                "description": "Port to use for Chrome remote debugging.",
+                "description": "Port to use for NWJS remote debugging.",
                 "default": 9222
-              },
-              "address": {
-                "type": "string",
-                "description": "TCP/IP address of debug port",
-                "default": "127.0.0.1"
-              },
-              "file": {
-                "type": "string",
-                "description": "A local html file to open in the browser",
-                "default": "${workspaceRoot}/index.html"
-              },
-              "url": {
-                "type": "string",
-                "description": "A url to open in the browser",
-                "default": "http://mysite.com/index.html"
-              },
-              "webRoot": {
-                "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
-                "default": "${workspaceRoot}"
               },
               "runtimeExecutable": {
                 "type": [
@@ -150,11 +113,6 @@
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
                 "default": true
-              },
-              "userDataDir": {
-                "type": "string",
-                "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
-                "default": ""
               },
               "sourceMapPathOverrides": {
                 "type": "object",

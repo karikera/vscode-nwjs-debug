@@ -1,33 +1,22 @@
+// A launch configuration that launches the extension inside a new window
 {
     "version": "0.1.0",
     "configurations": [
         {
-            "debugServer": 4712,
-            "name": "launch as server",
-            "type": "node2",
+            "name": "Launch Extension",
+            "type": "extensionHost",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/out/bundle.js",
-            "runtimeArgs": ["--harmony"],
-            "stopOnEntry": false,
-            "args": [ "--server=4712" ],
-            "sourceMaps": true,
-            "outDir": "${workspaceRoot}/out"
+            "runtimeExecutable": "${execPath}",
+            "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
+            "stopOnEntry": false
         },
         {
-            "name": "test",
-            "type": "node2",
+            "name": "Launch Tests",
+            "type": "extensionHost",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-            "args": [
-                "-u", "tdd",
-				"--colors",
-				"out/test/**.test.js"
-            ],
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outDir": "${workspaceRoot}/out"
+            "runtimeExecutable": "${execPath}",
+            "args": ["--extensionDevelopmentPath=${workspaceRoot}", "--extensionTestsPath=${workspaceRoot}/test" ],
+            "stopOnEntry": false
         }
     ]
 }
