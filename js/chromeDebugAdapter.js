@@ -27,11 +27,6 @@ const DefaultWebSourceMapPathOverrides = {
     // 'meteor://💻app/*': '${webRoot}/*',
 };
 
-function writeLog(log)
-{
-    fs.writeFileSync(path.resolve(__dirname,'log.log'), log, 'utf-8');
-}
-
 function resolveWebRootPattern(webRoot, sourceMapPathOverrides, warnOnMissing)
 {
     const resolvedOverrides = {};
@@ -110,7 +105,18 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
                 logger.error(errMsg);
                 this.terminateSession(errMsg);
             });
-            return this.doAttach(port);//, launchUrl, args.address);
+
+            var linkUrl = '*';
+            try
+            {
+                var obj = JSON.parse(fs.readFileSync(args.webRoot+"/package.json", 'utf-8'));
+                if (obj.main) linkUrl = NWJS_URL + obj.main;
+            }
+            catch(e)
+            {
+                utils.writeLog(e.stack);
+            }
+            return this.doAttach(port, linkUrl);//, launchUrl, args.address);
         });
     }
 
@@ -178,6 +184,12 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
      */
     restart() {
         return this.chrome.Page.reload({ ignoreCache: true });
+    }
+
+    shouldIgnoreScript(args)
+    {
+        return false;
+        //return super.shouldIgnoreScript(args);
     }
 }
 
