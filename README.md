@@ -1,7 +1,12 @@
 # nwjs README
 
-I fork Debugger for Chrome and add NWJS(Windows ver)
+I forked `Debugger for Chrome` and add `NWJS(Windows ver)`
 
-That's all
+Throw away typescript, and use javascript
 
-nwjs-sdk-v0.19.0-win-ia32
+I use NWJS LTS version (`nwjs-sdk-v0.19.0-win-ia32`)
+
+
+# Issues
+
+Sometimes nwjs terminate when use debug command, I don't known why..  want to fix
