@@ -134,7 +134,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
             }
             catch(e)
             {
-                utils.writeLog(e.stack);
+                logger.error(e.stack);
             }
             return that.doAttach(port, linkUrl);//, launchUrl, args.address);
         }

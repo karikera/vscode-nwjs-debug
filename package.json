@@ -1,8 +1,8 @@
 {
   "name": "vsc-nwjs",
-  "displayName": "NWJS",
+  "displayName": "NWjs",
   "version": "0.0.2",
-  "description": "NWJS Debugger",
+  "description": "NWjs Debugger",
   "license": "UNLICENSED",
   "author": {
     "name": "ruakr"

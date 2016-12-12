@@ -22,7 +22,6 @@ const targetFilter = (target) => target && (!target.type || target.type === 'pag
 // also note that __dirname here is ...out/
 const logFilePath = path.resolve(__dirname, '../vscode-chrome-debug.txt');
 
-// utils.clearLog();
 // utils.createFunctionListener(ChromeDebugSession.prototype, 'chromeDebugSession');
 // utils.createFunctionListener(UrlPathTransformer.prototype, 'pathTransformer');
 // utils.createFunctionListener(BaseSourceMapTransformer.prototype, 'sourceMapTransformer');

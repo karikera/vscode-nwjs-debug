@@ -1,6 +1,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const Core = require('../node_modules/vscode-chrome-debug-core');
+const logger = Core.logger;
 
 class DebounceHelper
 {
@@ -32,14 +34,6 @@ class DebounceHelper
 
 var utils = {
     DebounceHelper: DebounceHelper,
-    clearLog: function()
-    {
-        fs.writeFileSync(path.resolve(__dirname,'log.log'), '', 'utf-8');
-    },
-    writeLog: function(log)
-    {
-        fs.appendFileSync(path.resolve(__dirname,'log.log'), log+'\r\n', 'utf-8');
-    },
     getAllFunctions: function(obj)
     {
         var added = {};
@@ -79,7 +73,7 @@ var utils = {
                         return "["+v.consturctor.name+"]";
                     }
                 });
-                utils.writeLog(name+"."+funcname+"("+args.join(',')+")");
+                logger.error(name+"."+funcname+"("+args.join(',')+")");
                 return oldfunc.apply(this, arguments);
             };
         }
