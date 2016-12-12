@@ -16,7 +16,6 @@ const utils = require('./utils');
 const path = require('path');
 const fs = require('fs');
 
-const NWJS_PATH = path.resolve(__dirname ,'../nwjs-sdk-v0.19.0-win-ia32/nw.exe');
 const PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
 const NWJS_URL = "chrome-extension://fmhmbacajimhohffjheclodmnfkgldjk/";
 
@@ -81,7 +80,28 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
      */
     launch(args)
     {
-        return super.launch(args).then(() => {
+        const that = this;
+        var nwjs = require('nwjs');
+
+        function installTest()
+        {
+            if (nwjs !== null) return;
+            return new Promise((resolve, reject) =>{
+                logger.error("Download NWjs(0.14.7-sdk)...");
+                const NW_INSTALLER_PATH = path.join(__dirname, '../node_modules/nwjs/nw');
+                const installer = child_process.spawn('node', [NW_INSTALLER_PATH,'install','0.14.7-sdk']);
+                installer.stdout.on('data', (stdout)=>{ logger.error(stdout); });
+                installer.stderr.on('data', (stderr)=>{ logger.error(stderr); });
+                installer.on('close', ()=>{
+                    nwjs = require('nwjs');
+                    if (nwjs === null) reject('Install failed');
+                    else resolve();
+                });
+                installer.on('error', (err) => logger.error(err));
+            });
+        }
+        function spawnNWjs()
+        {
             // Start with remote debugging enabled
             const port = args.port || 9222;
             /** @type{string[]} */
@@ -94,16 +114,16 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
 
             chromeArgs.push(args.webRoot);
 
-            logger.log(`spawn('${NWJS_PATH}', ${JSON.stringify(chromeArgs) })`);
-            this._chromeProc = spawn(NWJS_PATH, chromeArgs, {
+            logger.log(`spawn('${nwjs}', ${JSON.stringify(chromeArgs) })`);
+            that._chromeProc = spawn(nwjs, chromeArgs, {
                 detached: true,
                 stdio: ['ignore'],
             });
-            this._chromeProc.unref();
-            this._chromeProc.on('error', (err) => {
+            that._chromeProc.unref();
+            that._chromeProc.on('error', (err) => {
                 const errMsg = 'NWJS error: ' + err;
                 logger.error(errMsg);
-                this.terminateSession(errMsg);
+                that.terminateSession(errMsg);
             });
 
             var linkUrl = '*';
@@ -116,8 +136,12 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
             {
                 utils.writeLog(e.stack);
             }
-            return this.doAttach(port, linkUrl);//, launchUrl, args.address);
-        });
+            return that.doAttach(port, linkUrl);//, launchUrl, args.address);
+        }
+
+        return super.launch(args)
+        .then(installTest)
+        .then(spawnNWjs);
     }
 
     /**

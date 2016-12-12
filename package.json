@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "NWJS",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "NWJS Debugger",
   "license": "UNLICENSED",
   "author": {
@@ -20,21 +20,10 @@
     "Debuggers"
   ],
   "dependencies": {
+    "nwjs": "^1.4.3",
     "vscode-chrome-debug-core": "3.7.2",
     "vscode-debugadapter": "^1.15.0-pre.4",
     "vscode-debugprotocol": "^1.15.0-pre.4"
-  },
-  "devDependencies": {
-    "@types/mocha": "^2.2.32",
-    "@types/mockery": "^1.4.29",
-    "@types/node": "^6.0.41",
-    "@types/source-map": "^0.1.27",
-    "chrome-remote-debug-protocol": "^1.2.20161007",
-    "glob": "^7.1.1",
-    "gulp": "^3.9.1",
-    "mocha": "^3.0.2",
-    "mockery": "^1.7.0",
-    "typemoq": "^0.3.3"
   },
   "contributes": {
     "breakpoints": [
