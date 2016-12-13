@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "NWjs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "NWjs Debugger",
   "license": "UNLICENSED",
   "author": {
@@ -9,10 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/karikera/vscode-chrome-debug"
+    "url": "https://github.com/karikera/vscode-nwjs"
   },
   "publisher": "ruakr",
-  "bugs": "https://github.com/karikera/vscode-chrome-debug/issues",
+  "bugs": "https://github.com/karikera/vscode-nwjs/issues",
   "engines": {
     "vscode": "^1.6.0"
   },

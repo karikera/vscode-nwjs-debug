@@ -83,13 +83,26 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
         const that = this;
         var nwjs = require('nwjs');
 
+        var linkUrl = '*';
+        var nwjsVersion = '0.14.7-sdk';
+        try
+        {
+            var obj = JSON.parse(fs.readFileSync(args.webRoot+"/package.json", 'utf-8'));
+            if (obj.main) linkUrl = NWJS_URL + obj.main;
+            //if (obj.jwnsVersion) nwjsVersion = obj.nwjsVersion;
+        }
+        catch(e)
+        {
+            logger.error(e.stack);
+        }
+
         function installTest()
         {
             if (nwjs !== null) return;
             return new Promise((resolve, reject) =>{
                 logger.error("Download NWjs(0.14.7-sdk)...");
                 const NW_INSTALLER_PATH = path.join(__dirname, '../node_modules/nwjs/nw');
-                const installer = child_process.spawn('node', [NW_INSTALLER_PATH,'install','0.14.7-sdk']);
+                const installer = child_process.spawn('node', [NW_INSTALLER_PATH,'install',nwjsVersion]);
                 installer.stdout.on('data', (stdout)=>{ logger.error(stdout); });
                 installer.stderr.on('data', (stderr)=>{ logger.error(stderr); });
                 installer.on('close', ()=>{
@@ -126,16 +139,6 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
                 that.terminateSession(errMsg);
             });
 
-            var linkUrl = '*';
-            try
-            {
-                var obj = JSON.parse(fs.readFileSync(args.webRoot+"/package.json", 'utf-8'));
-                if (obj.main) linkUrl = NWJS_URL + obj.main;
-            }
-            catch(e)
-            {
-                logger.error(e.stack);
-            }
             return that.doAttach(port, linkUrl);//, launchUrl, args.address);
         }
 

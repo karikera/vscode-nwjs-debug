@@ -6,3 +6,6 @@
 * Replace NWjs to npm `nwjs` module
 * Remove unuse files
 * Publish to VSCode market place
+
+# 0.0.3
+* Fix repository address
