@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "nwjs": "^1.4.3",
-    "vscode-chrome-debug-core": "3.7.2",
+    "vscode-chrome-debug-core": "3.8.1",
     "vscode-debugadapter": "^1.15.0-pre.4",
     "vscode-debugprotocol": "^1.15.0-pre.4"
   },

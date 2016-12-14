@@ -7,9 +7,7 @@ const logger = Core.logger;
 const ISourceMapPathOverrides = Core.ISourceMapPathOverrides;
 const coreUtils = Core.utils;
 
-const child_process = require('child_process');
-const spawn = child_process.spawn;
-const ChildProcess = child_process.ChildProcess;
+const {spawn, fork} = require('child_process');
 const DebugProtocol = require('vscode-debugprotocol').DebugProtocol;
 
 const utils = require('./utils');
@@ -25,6 +23,33 @@ const DefaultWebSourceMapPathOverrides = {
     // 'webpack:///*': '*',
     // 'meteor://💻app/*': '${webRoot}/*',
 };
+
+const nwjsVersion = '0.14.7-sdk';
+
+function installNWjs()
+{
+    return new Promise((resolve, reject) =>{
+        var nwjs = require('nwjs');
+        if (nwjs !== null)
+        {
+            resolve(nwjs);
+            return;
+        }
+        logger.error("Download NWjs(0.14.7-sdk)...");
+        const NW_INSTALLER_PATH = path.join(__dirname, '../node_modules/nwjs/nw');
+        const installer = fork(NW_INSTALLER_PATH, ['install',nwjsVersion], {
+            silent:true
+        });
+        installer.stdout.on('data', (stdout)=>{ logger.error(stdout); });
+        installer.stderr.on('data', (stderr)=>{ logger.error(stderr); });
+        installer.on('close', ()=>{
+            nwjs = require('nwjs');
+            if (nwjs === null) reject('Install failed');
+            else resolve(nwjs);
+        });
+        installer.on('error', (err) => logger.error(err));
+    });
+}
 
 function resolveWebRootPattern(webRoot, sourceMapPathOverrides, warnOnMissing)
 {
@@ -81,39 +106,18 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
     launch(args)
     {
         const that = this;
-        var nwjs = require('nwjs');
 
         var linkUrl = '*';
-        var nwjsVersion = '0.14.7-sdk';
         try
         {
             var obj = JSON.parse(fs.readFileSync(args.webRoot+"/package.json", 'utf-8'));
             if (obj.main) linkUrl = NWJS_URL + obj.main;
-            //if (obj.jwnsVersion) nwjsVersion = obj.nwjsVersion;
         }
         catch(e)
         {
             logger.error(e.stack);
         }
-
-        function installTest()
-        {
-            if (nwjs !== null) return;
-            return new Promise((resolve, reject) =>{
-                logger.error("Download NWjs(0.14.7-sdk)...");
-                const NW_INSTALLER_PATH = path.join(__dirname, '../node_modules/nwjs/nw');
-                const installer = child_process.spawn('node', [NW_INSTALLER_PATH,'install',nwjsVersion]);
-                installer.stdout.on('data', (stdout)=>{ logger.error(stdout); });
-                installer.stderr.on('data', (stderr)=>{ logger.error(stderr); });
-                installer.on('close', ()=>{
-                    nwjs = require('nwjs');
-                    if (nwjs === null) reject('Install failed');
-                    else resolve();
-                });
-                installer.on('error', (err) => logger.error(err));
-            });
-        }
-        function spawnNWjs()
+        function spawnNWjs(nwjs)
         {
             // Start with remote debugging enabled
             const port = args.port || 9222;
@@ -141,10 +145,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
 
             return that.doAttach(port, linkUrl);//, launchUrl, args.address);
         }
-
-        return super.launch(args)
-        .then(installTest)
-        .then(spawnNWjs);
+        return super.launch(args).then(installNWjs).then(spawnNWjs);
     }
 
     /**
