@@ -9,3 +9,7 @@
 
 # 0.0.3
 * Fix repository address
+
+# 0.0.4
+* Use fork instead of spawn node process
+* Update vscode-chrome-debug-core
