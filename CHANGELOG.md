@@ -13,3 +13,8 @@
 # 0.0.4
 * Use fork instead of spawn node process
 * Update vscode-chrome-debug-core
+
+# 0.0.5
+* Add install command & remove auto install feature
+* Fix EPERM error when install
+* Add icon & image description

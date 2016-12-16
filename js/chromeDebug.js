@@ -9,7 +9,6 @@ global.__base = path.resolve(__dirname, '..');
 const Core = require('../node_modules/vscode-chrome-debug-core');
 
 const ChromeDebugSession = Core.ChromeDebugSession;
-const logger = Core.logger;
 const UrlPathTransformer = Core.UrlPathTransformer;
 const BaseSourceMapTransformer = Core.BaseSourceMapTransformer;
 

@@ -1,8 +1,5 @@
 
-const fs = require('fs');
-const path = require('path');
-const Core = require('../node_modules/vscode-chrome-debug-core');
-const logger = Core.logger;
+const {logger} = require('../node_modules/vscode-chrome-debug-core');
 
 class DebounceHelper
 {

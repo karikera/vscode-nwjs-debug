@@ -4,17 +4,14 @@
 
 const Core = require('../node_modules/vscode-chrome-debug-core');
 const logger = Core.logger;
-const ISourceMapPathOverrides = Core.ISourceMapPathOverrides;
-const coreUtils = Core.utils;
 
-const {spawn, fork} = require('child_process');
+const {spawn} = require('child_process');
 const DebugProtocol = require('vscode-debugprotocol').DebugProtocol;
 
 const utils = require('./utils');
-const path = require('path');
 const fs = require('fs');
+const getPath = require('./nwjs/get-path');
 
-const PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
 const NWJS_URL = "chrome-extension://fmhmbacajimhohffjheclodmnfkgldjk/";
 
 const DefaultWebSourceMapPathOverrides = {
@@ -23,33 +20,6 @@ const DefaultWebSourceMapPathOverrides = {
     // 'webpack:///*': '*',
     // 'meteor://💻app/*': '${webRoot}/*',
 };
-
-const nwjsVersion = '0.14.7-sdk';
-
-function installNWjs()
-{
-    return new Promise((resolve, reject) =>{
-        var nwjs = require('nwjs');
-        if (nwjs !== null)
-        {
-            resolve(nwjs);
-            return;
-        }
-        logger.error("Download NWjs(0.14.7-sdk)...");
-        const NW_INSTALLER_PATH = path.join(__dirname, '../node_modules/nwjs/nw');
-        const installer = fork(NW_INSTALLER_PATH, ['install',nwjsVersion], {
-            silent:true
-        });
-        installer.stdout.on('data', (stdout)=>{ logger.error(stdout); });
-        installer.stderr.on('data', (stderr)=>{ logger.error(stderr); });
-        installer.on('close', ()=>{
-            nwjs = require('nwjs');
-            if (nwjs === null) reject('Install failed');
-            else resolve(nwjs);
-        });
-        installer.on('error', (err) => logger.error(err));
-    });
-}
 
 function resolveWebRootPattern(webRoot, sourceMapPathOverrides, warnOnMissing)
 {
@@ -105,6 +75,9 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
      */
     launch(args)
     {
+		const nwjs = getPath();
+        if (nwjs === null) throw new Error('Need install! Please use `NWjs Install` command');
+
         const that = this;
 
         var linkUrl = '*';
@@ -117,7 +90,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
         {
             logger.error(e.stack);
         }
-        function spawnNWjs(nwjs)
+        function spawnNWjs()
         {
             // Start with remote debugging enabled
             const port = args.port || 9222;
@@ -145,7 +118,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
 
             return that.doAttach(port, linkUrl);//, launchUrl, args.address);
         }
-        return super.launch(args).then(installNWjs).then(spawnNWjs);
+        return super.launch(args).then(spawnNWjs);
     }
 
     /**
@@ -218,6 +191,8 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
     {
         return false;
         //return super.shouldIgnoreScript(args);
+        // This ignore chrome-extention path
+        // but nwjs contains local storage as chrome-extension
     }
 }
 

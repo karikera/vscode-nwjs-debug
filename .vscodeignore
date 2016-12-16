@@ -1,19 +1,8 @@
-**/*.ts
-**/*.map
 .vscode/**
-lib/**
-typings/**
-testapp/**
-test/**
-*.vsix
-gulpfile.js
-tsconfig.json
-tsd.json
-tslint.json
-vscode-chrome-debug.txt
 
-out/src/**
-out/test/**
+.gitignore
+jsconfig.json
+.eslintrc.json
 
 node_modules/.bin/**
 node_modules/bufferutil/**
