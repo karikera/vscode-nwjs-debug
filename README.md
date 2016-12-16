@@ -1,4 +1,4 @@
-# nwjs README
+# NWjs README
 
 Forked from `Debugger for Chrome`
 
@@ -15,6 +15,8 @@ Need to install when first run
 After install
 
 ![run screenshot](img/run.png)
+
+Shortcut is `F5`
 
 # Issues
 

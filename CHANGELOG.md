@@ -18,3 +18,6 @@
 * Add install command & remove auto install feature
 * Fix EPERM error when install
 * Add icon & image description
+
+# 0.0.6
+* Fix timeout problem

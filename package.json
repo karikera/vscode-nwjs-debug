@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "NWjs",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "NWjs Debugger",
   "license": "UNLICENSED",
   "icon": "img/logo.png",

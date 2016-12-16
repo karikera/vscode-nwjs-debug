@@ -12,8 +12,6 @@ const utils = require('./utils');
 const fs = require('fs');
 const getPath = require('./nwjs/get-path');
 
-const NWJS_URL = "chrome-extension://fmhmbacajimhohffjheclodmnfkgldjk/";
-
 const DefaultWebSourceMapPathOverrides = {
     //"chrome-extension://fmhmbacajimhohffjheclodmnfkgldjk/*": '${webRoot}/*',
     // 'webpack:///./*': '${webRoot}/*',
@@ -84,7 +82,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
         try
         {
             var obj = JSON.parse(fs.readFileSync(args.webRoot+"/package.json", 'utf-8'));
-            if (obj.main) linkUrl = NWJS_URL + obj.main;
+            if (obj.main) linkUrl = '*/' + obj.main;
         }
         catch(e)
         {
