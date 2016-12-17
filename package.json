@@ -1,10 +1,9 @@
 {
   "name": "vsc-nwjs",
   "displayName": "NWjs",
-  "version": "0.0.6",
-  "description": "NWjs Debugger",
-  "license": "UNLICENSED",
+  "version": "0.0.7",
   "icon": "img/logo.png",
+  "description": "NWjs Debugger",
   "author": {
     "name": "ruakr"
   },
@@ -20,8 +19,9 @@
   "categories": [
     "Debuggers"
   ],
+  "license": "UNLICENSED",
   "dependencies": {
-    "vscode-chrome-debug-core": "3.8.1",
+    "vscode-chrome-debug-core": "3.8.2",
     "vscode-debugadapter": "^1.15.0-pre.4",
     "vscode-debugprotocol": "^1.15.0-pre.4",
 

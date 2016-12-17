@@ -21,3 +21,6 @@
 
 # 0.0.6
 * Fix timeout problem
+
+# 0.0.7
+* Update vscode-chrome-debug-core to 3.8.2
