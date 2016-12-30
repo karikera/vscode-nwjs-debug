@@ -102,6 +102,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
             logger.log(`spawn('${nwjsPath}', ${JSON.stringify(chromeArgs) })`);
             that._chromeProc = spawn(nwjsPath, chromeArgs, {
                 detached: true,
+                cwd: args.webRoot,
                 stdio: ['ignore'],
             });
             that._chromeProc.unref();

@@ -33,3 +33,6 @@
 
 # 0.0.9
 * Fix publish
+
+# 0.0.10
+* Change NWjs spawn directory to webRoot
