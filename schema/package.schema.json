@@ -1,0 +1,133 @@
+{
+    "type": "object",
+    "properties": {
+        "main":{
+            "type": "string",
+            "description": "which page should be opened when node-webkit starts."
+        },
+        "name":{
+            "type": "string",
+            "description": "the name of the package. This must be a unique, lowercase alpha-numeric name without spaces. It may include \".\" or \"_\" or \"-\" characters. It is otherwise opaque."
+        },
+        "nodejs":{
+            "type": "boolean",
+            "description": "set nodejs to false will disable Node support in WebKit."
+        },
+        "node-main":{
+            "type": "string",
+            "description": "specify the path to a node.js script file, it will be executed on startup in Node context. This script will have same runtime environment with normal node.js binary. The script is ensured to run before the first DOM window load starting from v0.3.3. See here for more information."
+        },
+        "single-instance":{
+            "type": "boolean",
+            "description": "by default node-webkit only allows one instance of your app if your app is a standalone package (packaged with instructions of How to package and distribute your apps), if you want to allow multiple instances of your app running at the same time, specify this to false."
+        },
+        "window":{
+            "$ref": "window.schema.json",
+            "description": "controls how the main window looks"
+        },
+        "webkit":{
+            "$ref": "webkit.schema.json",
+            "description": "controls what features of WebKit should be on/off"
+        },
+        "user-agent":{
+            "type": "string",
+            "description": "Override the User-Agent header in HTTP requests made from the application. The following placeholders are available:"
+        },
+        "node-remote":{
+            "type": "string",
+            "description": "Enable calling Node in remote pages. The value controls for which sites this feature should be turned on."
+        },
+        "chromium-args":{
+            "type": "string",
+            "description": "Specify chromium (content shell) command line arguments. It will be useful if you want to distribute the app with some custom chromium args. For example, if you want to disable the GPU accelerated video display, just add \"chromium-args\" : \"--disable-accelerated-video\". If you want to add multiple arguments, separate each two arguments by space. This field can take a number of flags in one argument as well, via enclosing them in single quotation marks."
+        },
+        "js-flags":{
+            "type": "string",
+            "description": "Specify the flags passed to JS engine(v8). e.g. turn on Harmony Proxies and Collections feature:"
+        },
+        "inject-js-start":{
+            "type": "string",
+            "description": "a local filename, relative to the application path, used to specify a JavaScript file to inject to the window."
+        },
+        "inject-js-end":{
+            "type": "string",
+            "description": "a local filename, relative to the application path, used to specify a JavaScript file to inject to the window."
+        },
+        "additional_trust_anchors":{
+            "type": "string",
+            "description": "containing a list of PEM-encoded certificates (i.e. \"-----BEGIN CERTIFICATE-----\\n...certificate data...\\n-----END CERTIFICATE-----\\n\")."
+        },
+        "snapshot":{
+            "type": "string",
+            "description": "Specify the path to the snapshot file to be loaded with the application. The snapshot file contains compiled code of your application."
+        },
+        "dom_storage_quota":{
+            "type": "integer",
+            "description": "Number of mega bytes for the quota of the DOM storage. The suggestion is to put double the value you want."
+        },
+        "no-edit-menu":{
+            "type": "boolean",
+            "description": "whether the default Edit menu should be disabled on Mac OS X. The default value is false. Only effective on Mac OS X. This is a workaround for a feature request and is expected to be replaced by something else soon"
+        },
+        "description":{
+            "type": "string",
+            "description": "a brief description of the package. By convention, the first sentence (up to the first \". \") should be usable as a package title in listings"
+        },
+        "version":{
+            "type": "string",
+            "description": "a version string conforming to the Semantic Versioning requirements."
+        },
+        "keywords":{
+            "type": "string",
+            "description": "an Array of string keywords to assist users searching for the package in catalogs."
+        },
+        "maintainers":{
+            "$ref": "people.schema.json",
+            "description": "Array of maintainers of the package. Each maintainer is a hash which must have a \"name\" property and may optionally provide \"email\" and \"web\" properties."
+        },
+        "contributors":{
+            "$ref": "people.schema.json",
+            "description": "an Array of hashes each containing the details of a contributor. Format is the same as for author. By convention, the first contributor is the original author of the package."
+        },
+        "bugs":{
+            "type": "string",
+            "format": "uri",
+            "description": "URL for submitting bugs. Can be mailto or http."
+        },
+        "licenses":{
+            "type": "array",
+            "description": "array of licenses under which the package is provided. Each license is a hash with a \"type\" property specifying the type of license and a url property linking to the actual text. If the license is one of the official open source licenses the official license name or its abbreviation may be explicated with the \"type\" property. If an abbreviation is provided (in parentheses), the abbreviation must be used.",
+            "items":{
+                "type": "object",
+                "properties": {
+                    "type":{
+                        "type":"string"
+                    },
+                    "url":{
+                        "type": "string",
+                        "format": "uri"
+                    }
+                }
+            }
+        },
+        "repositories":{
+            "type": "array",
+            "description": "Array of repositories where the package can be located. Each repository is a hash with properties for the \"type\" and \"url\" location of the repository to clone/checkout the package. A \"path\" property may also be specified to locate the package in the repository if it does not reside at the root. For example:",
+            "items":{
+                "type": "object",
+                "properties": {
+                    "type":{
+                        "type":"string"
+                    },
+                    "url":{
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "path":{
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

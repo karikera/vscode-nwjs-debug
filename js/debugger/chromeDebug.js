@@ -6,13 +6,15 @@ const path = require('path');
 const utils = require('./utils');
 global.__base = path.resolve(__dirname, '..');
 
-const Core = require('../node_modules/vscode-chrome-debug-core');
+const Core = require('../../node_modules/vscode-chrome-debug-core');
 
 const ChromeDebugSession = Core.ChromeDebugSession;
 const UrlPathTransformer = Core.UrlPathTransformer;
 const BaseSourceMapTransformer = Core.BaseSourceMapTransformer;
 
 const ChromeDebugAdapter = require('./chromeDebugAdapter');
+
+
 
 const EXTENSION_NAME = 'nwjs';
 const targetFilter = (target) => target && (!target.type || target.type === 'page');

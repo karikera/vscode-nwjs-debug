@@ -1,0 +1,17 @@
+{
+    "type":"object",
+    "properties": {
+        "plugin":{
+            "type": "boolean",
+            "description": "whether to load external browser plugins like Flash, default to false."
+        },
+        "java":{
+            "type": "boolean",
+            "description": "whether to load Java applets, default to false."
+        },
+        "aage-cache":{
+            "type": "boolean",
+            "description": "whether to enable page cache, default to false."
+        }
+    }
+}

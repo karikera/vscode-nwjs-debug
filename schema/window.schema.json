@@ -1,0 +1,85 @@
+{
+    "type": "object",
+    "properties": {
+        "title":{
+            "type": "string",
+            "description": "the default title of window created by node-webkit, it's very useful if you want to show your own title when the app is starting."
+        },
+        "width":{
+            "type": "integer",
+            "description": "the initial width of the main window."
+        },
+        "height":{
+            "type": "integer",
+            "description": "the initial height of the main window."
+        },
+        "toolbar":{
+            "type": "boolean",
+            "description": "should the navigation toolbar be showed."
+        },
+        "icon":{
+            "type": "string",
+            "description": "path to window's icon"
+        },
+        "position":{
+            "type": "string",
+            "description": "be null or center or mouse, controls where window will be put"
+        },
+        "min_width":{
+            "type": "integer",
+            "description": "minimum width of window"
+        },
+        "min_height":{
+            "type": "integer",
+            "description": "minimum height of window"
+        },
+        "max_width":{
+            "type": "integer",
+            "description": "maximum width of window"
+        },
+        "max_height":{
+            "type": "integer",
+            "description": "maximum height of window"
+        },
+        "as_desktop":{
+            "type": "boolean",
+            "description": "show as desktop background window under X11 environment"
+        },
+        "resizable":{
+            "type": "boolean",
+            "description": "whether window is resizable"
+        },
+        "always-on-top":{
+            "type": "boolean",
+            "description": "whether the window should always stay on top of other windows."
+        },
+        "visible-on-all-workspaces":{
+            "type": "boolean",
+            "description": "whether the window should be visible on all workspaces simultaneously (on platforms that support multiple workspaces, currently Mac OS X and Linux)."
+        },
+        "fullscreen":{
+            "type": "boolean",
+            "description": "whether window is fullscreen"
+        },
+        "show_in_taskbar":{
+            "type": "boolean",
+            "description": "whether the window is shown in taskbar or dock. The default is true."
+        },
+        "frame":{
+            "type": "boolean",
+            "description": "specify it to false to make the window frameless"
+        },
+        "show":{
+            "type": "boolean",
+            "description": "specify it to false if you want your app to be hidden on startup"
+        },
+        "kiosk":{
+            "type": "boolean",
+            "description": "whether to use Kiosk mode. In Kiosk mode, the app will be fullscreen and try to prevent users from leaving the app, so you should remember to provide a way in app to leave Kiosk mode. This mode is mainly used for presentation on public displays"
+        },
+        "transparent":{
+            "type": "boolean",
+            "description": "whether to turn on transparent window mode. The default is false."
+        }
+    }
+}

@@ -1,5 +1,7 @@
 
-const {logger} = require('../node_modules/vscode-chrome-debug-core');
+const {logger} = require('../../node_modules/vscode-chrome-debug-core');
+
+
 
 class DebounceHelper
 {

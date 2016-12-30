@@ -2,21 +2,27 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-const Core = require('../node_modules/vscode-chrome-debug-core');
-const logger = Core.logger;
-
 const {spawn} = require('child_process');
 const DebugProtocol = require('vscode-debugprotocol').DebugProtocol;
 
+const Core = require('../../node_modules/vscode-chrome-debug-core');
+const logger = Core.logger;
+
 const utils = require('./utils');
-const fs = require('fs');
-const getPath = require('./nwjs/get-path');
+const nfs = require('../nfs');
+const nwjs = require('../nwjs/nwjs');
+
+
 
 const DefaultWebSourceMapPathOverrides = {
-    //"chrome-extension://fmhmbacajimhohffjheclodmnfkgldjk/*": '${webRoot}/*',
-    // 'webpack:///./*': '${webRoot}/*',
-    // 'webpack:///*': '*',
-    // 'meteor://💻app/*': '${webRoot}/*',
+    'webpack:///./*': '${webRoot}/*',
+    'webpack:///*': '*',
+    'meteor://💻app/*': '${webRoot}/*',
+};
+
+const DEFAULT_PACKAGE_JSON = {
+    name: 'untitled',
+    main: 'index.html'
 };
 
 function resolveWebRootPattern(webRoot, sourceMapPathOverrides, warnOnMissing)
@@ -73,21 +79,12 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
      */
     launch(args)
     {
-		const nwjs = getPath();
-        if (nwjs === null) throw new Error('Need install! Please use `NWjs Install` command');
+		const nwjsPath = nwjs.getPath(nwjs.defaultVersion+'-sdk');
+        if (nwjsPath === null) throw new Error('Need install! Please use `NWjs Install` command');
 
         const that = this;
-
-        var linkUrl = '*';
-        try
-        {
-            var obj = JSON.parse(fs.readFileSync(args.webRoot+"/package.json", 'utf-8'));
-            if (obj.main) linkUrl = '*/' + obj.main;
-        }
-        catch(e)
-        {
-            logger.error(e.stack);
-        }
+        const config = nfs.readJson(args.webRoot+"/package.json", DEFAULT_PACKAGE_JSON, true);
+        const linkUrl = 'chrome-extension://*/' + config.main;
         function spawnNWjs()
         {
             // Start with remote debugging enabled
@@ -102,8 +99,8 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
 
             chromeArgs.push(args.webRoot);
 
-            logger.log(`spawn('${nwjs}', ${JSON.stringify(chromeArgs) })`);
-            that._chromeProc = spawn(nwjs, chromeArgs, {
+            logger.log(`spawn('${nwjsPath}', ${JSON.stringify(chromeArgs) })`);
+            that._chromeProc = spawn(nwjsPath, chromeArgs, {
                 detached: true,
                 stdio: ['ignore'],
             });

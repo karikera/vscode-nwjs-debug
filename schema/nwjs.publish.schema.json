@@ -1,0 +1,24 @@
+{
+    "type": "object",
+    "properties":{
+        "package":{
+            "$ref": "package.schema.json",
+            "description": "For override package.json"
+        },
+        "html":{
+            "type": "array",
+            "description": "Contains html files. Can use glob.\nReferenced scripts will compiled by nwjc",
+            "items":{"type":"string"}
+        },
+        "files":{
+            "type": "array",
+            "description": "Contains files. Can use glob. will compressed by zip",
+            "items":{"type":"string"}
+        },
+        "exclude":{
+            "type": "array",
+            "description": "Exclude file from nwjs files. for unusing DLL",
+            "items":{"type":"string"}
+        }
+    }
+}
