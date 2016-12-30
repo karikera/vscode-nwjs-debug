@@ -30,3 +30,6 @@
 * Generate package.json when not exists
 * Add snapshot compile command `NWjs Compile`
 * Add publish command `NWjs Publish`
+
+# 0.0.9
+* Fix publish

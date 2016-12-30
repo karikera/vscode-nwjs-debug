@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "NWjs",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "icon": "img/logo.png",
   "description": "NWjs Debugger",
   "author": {
@@ -23,11 +23,9 @@
   "dependencies": {
     "archiver": "^1.3.0",
     "co": "^4.6.0",
-    "configstore": "^1.4.0",
     "extract-zip": "^1.6.0",
     "figures": "^1.4.0",
     "glob-all": "^3.1.0",
-    "io-spin": "^0.3.0",
     "is-semver": "^1.0.0",
     "nwjs-versions": "0.0.3",
     "path-exists": "^1.0.0",

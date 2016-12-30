@@ -19,7 +19,7 @@ const util = {
             {
                 for(const p in from)
                 {
-                    target[p] = override(target[p], from[p]);
+                    target[p] = util.override(target[p], from[p]);
                 }
                 return target;
             }
