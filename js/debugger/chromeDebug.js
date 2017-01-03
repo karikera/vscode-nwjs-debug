@@ -14,8 +14,6 @@ const BaseSourceMapTransformer = Core.BaseSourceMapTransformer;
 
 const ChromeDebugAdapter = require('./chromeDebugAdapter');
 
-
-
 const EXTENSION_NAME = 'nwjs';
 const targetFilter = (target) => target && (!target.type || target.type === 'page');
 
@@ -28,15 +26,15 @@ const logFilePath = path.resolve(__dirname, '../vscode-chrome-debug.txt');
 // utils.createFunctionListener(BaseSourceMapTransformer.prototype, 'sourceMapTransformer');
 // utils.createFunctionListener(ChromeDebugAdapter.prototype, 'chromeAdapter');
 
-ChromeDebugSession.run(ChromeDebugSession.getSession(
-{
-    adapter: ChromeDebugAdapter,
-    extensionName: EXTENSION_NAME,
-    logFilePath,
-    targetFilter,
-    pathTransformer: UrlPathTransformer,
-    sourceMapTransformer: BaseSourceMapTransformer,
-}));
-
 // Start a ChromeDebugSession configured to only match 'page' targets, which are Chrome tabs.
 // Cast because DebugSession is declared twice - in this repo's vscode-debugadapter, and that of -core... TODO
+ChromeDebugSession.run(ChromeDebugSession.getSession(
+    {
+        adapter: ChromeDebugAdapter,
+        extensionName: EXTENSION_NAME,
+        logFilePath,
+        targetFilter,
+
+        pathTransformer: UrlPathTransformer,
+        sourceMapTransformer: BaseSourceMapTransformer,
+    }));

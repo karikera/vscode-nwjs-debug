@@ -36,3 +36,8 @@
 
 # 0.0.10
 * Change NWjs spawn directory to webRoot
+
+# 0.0.11
+* Rename repository and extension name
+* Update to vscode-chrome-debug-core@3.8.3
+
