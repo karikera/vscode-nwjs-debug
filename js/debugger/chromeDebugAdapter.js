@@ -122,6 +122,7 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
      */
     commonArgs(args)
     {
+        args.sourceMaps = typeof args.sourceMaps === 'undefined' || args.sourceMaps;
         args.sourceMapPathOverrides = getSourceMapPathOverrides(args.webRoot, args.sourceMapPathOverrides);
         //args.skipFileRegExps = ['^chrome-extension:.*'];
         super.commonArgs(args);
