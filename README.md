@@ -6,6 +6,8 @@ Throw away typescript, and use javascript
 
 NWjs version: `v0.14.7-sdk`
 
+English is not my mother tongue; please excuse any errors on my part.
+
 # Install
 
 Need to install when first run
@@ -26,4 +28,5 @@ Shortcut is `F5`
 
 # Issues
 
-Sometimes NWjs terminate when use debug command. I don't known why..  want to fix
+Chrome debugger will attach little later after launch,  
+If you want to debug a script that run immediately, You can use `Restart Debugger`(Ctrl+Shift+F5, It will just reload page)
