@@ -41,3 +41,6 @@
 * Rename repository and extension name
 * Update to vscode-chrome-debug-core@3.8.3
 
+# 0.0.12
+* Update README
+* Update to vscode-chrome-debug-core@3.11.0

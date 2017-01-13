@@ -90,7 +90,11 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
             // Start with remote debugging enabled
             const port = args.port || 9222;
             /** @type{string[]} */
-            const chromeArgs = ['--remote-debugging-port=' + port];
+            const chromeArgs = [];
+
+            if (!args.noDebug) {
+                chromeArgs.push('--remote-debugging-port=' + port);
+            }
 
             // Also start with extra stuff disabled
             if (args.runtimeArgs) {
@@ -112,7 +116,9 @@ class ChromeDebugAdapter extends Core.ChromeDebugAdapter
                 that.terminateSession(errMsg);
             });
 
-            return that.doAttach(port, linkUrl);//, launchUrl, args.address);
+            return args.noDebug ? undefined :
+                this.doAttach(port, linkUrl);// launchUrl, args.address);
+        });
         }
         return super.launch(args).then(spawnNWjs);
     }
