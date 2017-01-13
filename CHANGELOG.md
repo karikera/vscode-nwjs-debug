@@ -44,3 +44,4 @@
 # 0.0.12
 * Update README
 * Update to vscode-chrome-debug-core@3.11.0
+* Change coding style for merge easily

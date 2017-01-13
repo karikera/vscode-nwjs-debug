@@ -1,26 +1,25 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-
 const path = require('path');
-const utils = require('./utils');
-global.__base = path.resolve(__dirname, '..');
+global.__base = path.resolve(__dirname, '../..');
 
-const Core = require('../../node_modules/vscode-chrome-debug-core');
-
-const ChromeDebugSession = Core.ChromeDebugSession;
-const UrlPathTransformer = Core.UrlPathTransformer;
-const BaseSourceMapTransformer = Core.BaseSourceMapTransformer;
+const {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer} = require('vscode-chrome-debug-core');
 
 const ChromeDebugAdapter = require('./chromeDebugAdapter');
 
-const EXTENSION_NAME = 'nwjs';
+const EXTENSION_NAME = 'vsc-nwjs';
 const targetFilter = (target) => target && (!target.type || target.type === 'page');
+
+// Injected by webpack
+const VERSION = require('../../package.json').version;
+let versionWithDefault = typeof VERSION === 'undefined' ? 'unspecified' : VERSION; // Not built with webpack for tests
 
 // non-.txt file types can't be uploaded to github
 // also note that __dirname here is ...out/
 const logFilePath = path.resolve(__dirname, '../vscode-chrome-debug.txt');
 
+// const utils = require('./utils');
 // utils.createFunctionListener(ChromeDebugSession.prototype, 'chromeDebugSession');
 // utils.createFunctionListener(UrlPathTransformer.prototype, 'pathTransformer');
 // utils.createFunctionListener(BaseSourceMapTransformer.prototype, 'sourceMapTransformer');
@@ -38,3 +37,5 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
         pathTransformer: UrlPathTransformer,
         sourceMapTransformer: BaseSourceMapTransformer,
     }));
+
+logger.log(EXTENSION_NAME + ': ' + versionWithDefault);

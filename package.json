@@ -51,6 +51,20 @@
     "onCommand:vscode-nwjs.compile"
   ],
   "contributes": {
+    "breakpoints": [
+      {
+        "language": "javascript"
+      },
+      {
+        "language": "typescriptreact"
+      },
+      {
+        "language": "javascriptreact"
+      },
+      {
+        "language": "fsharp"
+      }
+    ],
     "commands": [
       {
         "command": "vscode-nwjs.install",
@@ -77,20 +91,6 @@
       {
         "fileMatch": "nwjs.publish.json",
         "url": "./schema/nwjs.publish.schema.json"
-      }
-    ],
-    "breakpoints": [
-      {
-        "language": "javascript"
-      },
-      {
-        "language": "typescriptreact"
-      },
-      {
-        "language": "javascriptreact"
-      },
-      {
-        "language": "fsharp"
       }
     ],
     "debuggers": [
@@ -124,6 +124,11 @@
                 "description": "Port to use for NWJS remote debugging.",
                 "default": 9222
               },
+              "webRoot": {
+                "type": "string",
+                "description": "This specifies the workspace absolute path to the webserver root.",
+                "default": "${workspaceRoot}"
+              },
               "runtimeExecutable": {
                 "type": [
                   "string",
@@ -154,11 +159,6 @@
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
                 "default": true
-              },
-              "webRoot": {
-                "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
-                "default": "${workspaceRoot}"
               },
               "sourceMapPathOverrides": {
                 "type": "object",

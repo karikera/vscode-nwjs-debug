@@ -1,17 +1,26 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 
 const {logger} = require('../../node_modules/vscode-chrome-debug-core');
+const nwjs = require('../nwjs/nwjs');
 
 
+function getBrowserPath() {
+	return nwjs.getPath(nwjs.defaultVersion+'-sdk');
+}
 
-class DebounceHelper
-{
-    constructor(timeoutMs)
-    {
+class DebounceHelper {
+
+    constructor(timeoutMs) {
         this.timeoutMs = timeoutMs;
         this.waitToken = null;
     }
-    wait(fn)
-    {
+
+    /**
+     * If not waiting already, call fn after the timeout
+     */
+    wait(fn) {
         if (!this.waitToken) {
             this.waitToken = setTimeout(() => {
                 this.waitToken = null;
@@ -20,8 +29,11 @@ class DebounceHelper
                 this.timeoutMs);
         }
     }
-    doAndCancel(fn)
-    {
+
+    /**
+     * If waiting for something, cancel it and call fn immediately
+     */
+    doAndCancel(fn) {
         if (this.waitToken) {
             clearTimeout(this.waitToken);
             this.waitToken = null;
@@ -31,7 +43,8 @@ class DebounceHelper
     }
 }
 
-var utils = {
+const utils = {
+	getBrowserPath: getBrowserPath,
     DebounceHelper: DebounceHelper,
     getAllFunctions: function(obj)
     {
