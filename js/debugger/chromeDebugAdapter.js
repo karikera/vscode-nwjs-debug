@@ -86,6 +86,11 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     commonArgs(args) {
+        if (!args.webRoot && args.pathMapping && args.pathMapping['/']) {
+            // Adapt pathMapping['/'] as the webRoot when not set, since webRoot is explicitly used in many places
+            args.webRoot = args.pathMapping['/'];
+        }
+
         args.sourceMaps = typeof args.sourceMaps === 'undefined' || args.sourceMaps;
         args.sourceMapPathOverrides = getSourceMapPathOverrides(args.webRoot, args.sourceMapPathOverrides);
         //args.skipFileRegExps = ['^chrome-extension:.*'];
@@ -107,9 +112,9 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
         return [...super.runConnection(), this.chrome.Page.enable()];
     }
 
-    onPaused(notification) {
+    onPaused(notification, expectingStopReason) {
         this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
-        super.onPaused(notification);
+        super.onPaused(notification, expectingStopReason);
     }
 
     onResumed() {

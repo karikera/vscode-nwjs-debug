@@ -1,7 +1,47 @@
-// A launch configuration that launches the extension inside a new window
 {
     "version": "0.1.0",
     "configurations": [
+        {
+            // "debugServer": 4712,
+            "name": "launch as server",
+            "type": "node2",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "program": "${workspaceRoot}/out/bundle.js",
+            "runtimeArgs": ["--harmony"],
+            "stopOnEntry": false,
+            "args": [ "--server=4712" ],
+            "sourceMaps": true,
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+        },
+        {
+            // "debugServer": 4712,
+            "name": "test",
+            "type": "node2",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+				"--colors",
+				"out/test/**/*.test.js",
+                "--reporter", "out/test/int/loggingReporter.js",
+                "--timeout", "1800000"
+            ],
+            "sourceMaps": true,
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+        },
+        {
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}"
+			],
+			"sourceMaps": true,
+			"outFiles": [ "${workspaceRoot}/out/**/*.js" ]
+		},
         {
             // "debugServer": 4712,
             "name": "launch as server",

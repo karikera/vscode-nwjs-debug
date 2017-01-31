@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "icon": "img/logo.png",
   "description": "NWjs Debugger",
   "author": {
@@ -21,9 +21,9 @@
   ],
   "license": "UNLICENSED",
   "dependencies": {
-    "vscode-chrome-debug-core": "^3.12.2",
-    "vscode-debugadapter": "^1.16.0",
-    "vscode-debugprotocol": "^1.16.0"
+    "vscode-chrome-debug-core": "3.12.2",
+    "vscode-debugadapter": "^1.16.0-pre.1",
+    "vscode-debugprotocol": "^1.16.0-pre.1",
     "archiver": "^1.3.0",
     "co": "^4.6.0",
     "extract-zip": "^1.6.0",
@@ -41,7 +41,7 @@
     "typescript": "^2.1.5",
     "vscode": "^1.0.3",
     "eslint": "^3.14.1",
-    "@types/node": "^6.0.62",
+    "@types/node": "^6.0.62"
   },
   "main": "./js/command",
   "activationEvents": [
@@ -100,20 +100,42 @@
         "program": "./js/debugger/chromeDebug.js",
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+        "languages": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
         "initialConfigurations": [
           {
-            "name": "Launch NWJS",
             "type": "nwjs",
             "request": "launch",
+            "name": "Launch NWJS",
             "webRoot": "${workspaceRoot}"
           },
           {
-            "name": "Attach to Chrome",
             "type": "nwjs",
             "request": "attach",
+            "name": "Attach to Chrome",
             "port": 9222,
             "webRoot": "${workspaceRoot}"
           }
+        ],
+        "configurationSnippets": [
+          {
+						"label": "NWjs: Launch",
+						"description": "Launch NWjs to debug",
+						"body": {
+							"type": "nwjs",
+							"request": "launch",
+							"name": "${2:Launch NWjs}"
+            }
+          },
+          {
+						"label": "Chrome: Launch with userDataDir",
+						"description": "Launch NWjs with a separate userDataDir, useful when another instance is already running",
+						"body": {
+							"type": "nwjs",
+							"request": "launch",
+							"name": "${2:Launch Chrome}",
+              "userDataDir": "^\"\\${workspaceRoot}/.vscode/nwjs\""
+						}
+					}
         ],
         "configurationAttributes": {
           "launch": {
@@ -126,8 +148,13 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root.",
+                "description": "This specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
+              },
+              "pathMapping": {
+                "type": "object",
+                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "default": { "/": "${workspaceRoot}" }
               },
               "runtimeExecutable": {
                 "type": [
@@ -210,12 +237,17 @@
               "url": {
                 "type": "string",
                 "description": "Will search for a tab with this EXACT url and attach to it, if found",
-                "default": "http://mysite.com/index.html"
+                "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
+                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
+              },
+              "pathMapping": {
+                "type": "object",
+                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "default": {}
               },
               "sourceMapPathOverrides": {
                 "type": "object",
