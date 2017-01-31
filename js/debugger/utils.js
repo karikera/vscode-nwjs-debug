@@ -46,7 +46,7 @@ class DebounceHelper {
 const utils = {
 	getBrowserPath: getBrowserPath,
     DebounceHelper: DebounceHelper,
-    getAllFunctions: function(obj)
+    getAllFunctions(obj)
     {
         var added = {};
         var funcs = [];
@@ -64,7 +64,7 @@ const utils = {
         while (obj = Object.getPrototypeOf(obj));
         return funcs;
     },
-    createFunctionListener: function(obj, name)
+    createFunctionListener(obj, name)
     {
         for(let funcname of utils.getAllFunctions(obj))
         {

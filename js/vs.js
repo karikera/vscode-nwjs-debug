@@ -27,15 +27,15 @@ const vs = module.exports = {
     /**
      * @param {string} str
      */
-    log: function(value)
+    log(value)
     {
         output.appendLine(value);
     },
-    show: function()
+    show()
     {
         output.show();
     },
-    clear: function()
+    clear()
     {
         output.clear();
     },
@@ -45,7 +45,7 @@ const vs = module.exports = {
      * @param {...string} items
      * @return {!Promise<string|undefined>}
      */
-    errorBox: function(err, items)
+    errorBox(err, items)
     {
         return window.showErrorMessage(...arguments);
     },
@@ -53,7 +53,7 @@ const vs = module.exports = {
      * @param {string} msg
      * @return {!Promise<undefined>}
      */
-    infoBox: function(msg)
+    infoBox(msg)
     {
         window.showInformationMessage(msg);
     },
@@ -61,7 +61,7 @@ const vs = module.exports = {
      * @param {string} file
      * @return {!Promise}
      */
-    open: function(file)
+    open(file)
     {
         return workspace.openTextDocument(file)
         .then((doc) => window.showTextDocument(doc));

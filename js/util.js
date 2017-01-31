@@ -5,7 +5,7 @@ const util = {
      * @param {*} target
      * @param {*} from
      */
-    override: function(target, from)
+    override(target, from)
     {
         if (from instanceof Array)
         {

@@ -8,7 +8,7 @@ const nfs = {
      * @param {string} evname
      * @return {!Promise}
      */
-    eventToPromise: function(stream, evname)
+    eventToPromise(stream, evname)
     {
         return new Promise((resolve)=>{
             stream.on(evname, resolve);
@@ -19,7 +19,7 @@ const nfs = {
      * @param {Object=} def
      * @param {boolean=} forceCreate
      */
-    readJson: function(file, def, forceCreate)
+    readJson(file, def, forceCreate)
     {
         var obj = null;
         try
@@ -52,14 +52,14 @@ const nfs = {
      * @param {string} file
      * @param {*} obj
      */
-    writeJson: function(file, obj)
+    writeJson(file, obj)
     {
         fs.writeFileSync(file, JSON.stringify(obj, null, 2), 'utf-8');
     },
     /**
      * @param {string} dirPath
      */
-    mkdir:function(dirPath)
+    mkdir(dirPath)
     {
         try
         {
@@ -82,7 +82,7 @@ const nfs = {
      * @param {string} filename
      * @return {!Promise}
      */
-    writeTo: function(filename, fos)
+    writeTo(filename, fos)
     {
         const read = fs.createReadStream(filename);
         read.pipe(fos, {end: false});
@@ -94,7 +94,7 @@ const nfs = {
      * @param {string} to
      * @return {!Promise}
      */
-    copy: function(from, to)
+    copy(from, to)
     {
         const fos = fs.createWriteStream(to);
         fs.createReadStream(from).pipe(fos);

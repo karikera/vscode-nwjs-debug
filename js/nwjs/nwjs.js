@@ -23,7 +23,7 @@ const nwjs = module.exports = {
      * @param {string} version
      * @return {boolean}
      */
-    exists: function(version)
+    exists(version)
     {
         return nwjs.getRootPath(version) !== null;
     },
@@ -31,7 +31,7 @@ const nwjs = module.exports = {
      * @param {string} version
      * @return {?string}
      */
-    getRootPath: function(version)
+    getRootPath(version)
     {
         const nw = path.join(home, '.nwjs', nwjs.getName(version).fileName);
         if (!fs.existsSync(nw)) return null;
@@ -41,7 +41,7 @@ const nwjs = module.exports = {
      * @param {string} version
      * @return {?string}
      */
-    getNwjc: function (version) {
+    getNwjc (version) {
         const root = nwjs.getRootPath(version);
         if (root === null) return null;
 
@@ -58,7 +58,7 @@ const nwjs = module.exports = {
      * @param {string} version
      * @return {?string}
      */
-    getPath: function (version) {
+    getPath (version) {
         const root = nwjs.getRootPath(version);
         if (root === null) return null;
 
@@ -74,7 +74,7 @@ const nwjs = module.exports = {
     /**
      * @param {string} version
      */
-    getName: function(version)
+    getName(version)
     {
         const realVersion = version.split('-sdk').shift();
         const fileName = version == realVersion ? `nwjs-v${realVersion}-${os.platform}-${os.arch}` : `nwjs-sdk-v${realVersion}-${os.platform}-${os.arch}`;
@@ -86,7 +86,7 @@ const nwjs = module.exports = {
      * @param {string} version
      * @return {boolean}
      */
-    remove: function (version) {
+    remove (version) {
         if (!nwjs.exists(version)) return false;
         rm('-r', `${home}/.nwjs/${nwjs.getName(version).fileName}`);
         return true;
