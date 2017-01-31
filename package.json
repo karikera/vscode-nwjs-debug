@@ -21,6 +21,7 @@
   ],
   "license": "UNLICENSED",
   "dependencies": {
+    "vscode": "^1.0.3",
     "vscode-chrome-debug-core": "3.12.2",
     "vscode-debugadapter": "^1.16.0-pre.1",
     "vscode-debugprotocol": "^1.16.0-pre.1",
@@ -39,7 +40,6 @@
   },
   "devDependencies": {
     "typescript": "^2.1.5",
-    "vscode": "^1.0.3",
     "eslint": "^3.14.1",
     "@types/node": "^6.0.62"
   },
@@ -123,16 +123,18 @@
 						"body": {
 							"type": "nwjs",
 							"request": "launch",
-							"name": "${2:Launch NWjs}"
+							"name": "${2:Launch NWjs}",
+							"webRoot": "^\"\\${workspaceRoot}\""
             }
           },
           {
-						"label": "Chrome: Launch with userDataDir",
+						"label": "NWjs: Launch with userDataDir",
 						"description": "Launch NWjs with a separate userDataDir, useful when another instance is already running",
 						"body": {
 							"type": "nwjs",
 							"request": "launch",
-							"name": "${2:Launch Chrome}",
+							"name": "${2:Launch NWjs}",
+							"webRoot": "^\"\\${workspaceRoot}\"",
               "userDataDir": "^\"\\${workspaceRoot}/.vscode/nwjs\""
 						}
 					}
@@ -186,6 +188,11 @@
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
                 "default": true
+              },
+              "userDataDir": {
+                "type": "string",
+                "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
+                "default": ""
               },
               "sourceMapPathOverrides": {
                 "type": "object",
