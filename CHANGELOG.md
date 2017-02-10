@@ -1,3 +1,6 @@
+# 0.0.16
+* Update to vscode-chrome-debug-core@3.12.
+
 # 0.0.14
 * Update to vscode-chrome-debug-core@3.12.5
 
