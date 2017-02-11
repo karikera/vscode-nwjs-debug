@@ -13,7 +13,7 @@ const nfs = require('./nfs');
 const vs = require('./vs');
 const util = require('./util');
 
-const NOT_INSTALL = 'NOT_INSTALL';
+const NEED_INSTALL = 'NEED_INSTALL';
 const NEED_PUBLISH_JSON = 'NEED_PUBLISH_JSON';
 const NEED_PACKAGE_JSON = 'NEED_PACKAGE_JSON';
 
@@ -22,6 +22,7 @@ const DEFAULT_PACKAGE_JSON = {
     main: 'index.html'
 };
 const DEFAULT_PUBLISH_JSON = {
+    "version":'any',
 	"package":{},
 	"html":["index.html"],
 	"files":[],
@@ -45,36 +46,65 @@ function replaceExt(filename, ext)
         return filename + '.'+ext;
 }
 
-function *installNWjs()
+/**
+ * @param {string=} version
+ */
+function *installNWjs(version)
 {
+    if (!version)
+    {
+        version = yield window.showQuickPick(
+            nwjs.list().then(exists=>{
+                const map = new Set;
+                for(const v of exists) map.add(v);
+                return nwjs.listAll(v=>!map.has(v));
+            }),
+            {placeHolder: "Select install version"});
+        if (!version) return;
+    }
     var downloaded = false;
-    downloaded = (yield nwjs.install(nwjs.defaultVersion)) || downloaded;
-    downloaded = (yield nwjs.install(nwjs.defaultVersion+'-sdk')) || downloaded;
+    downloaded = (yield nwjs.install(version)) || downloaded;
+    downloaded = (yield nwjs.install(version+'-sdk')) || downloaded;
     if(downloaded) vs.infoBox("Install complete");
     else vs.infoBox("NWjs already installed");
 }
 
 function *removeNWjs()
 {
+    const version = yield window.showQuickPick(
+        nwjs.list(v=>!v.endsWith('-sdk')),
+        {placeHolder: "Select remove version"});
+    if (!version) return;
     var res = false;
-    res = nwjs.remove(nwjs.defaultVersion) || res;
-    res = nwjs.remove(nwjs.defaultVersion+'sdk') || res;
+    res = nwjs.remove(version) || res;
+    res = nwjs.remove(version+'-sdk') || res;
     if (res) vs.infoBox("Remove complete");
     else vs.infoBox("NWjs already removed");
 }
 
 /**
+ * @param {string=} version
  * @param {string=} filename
  * @param {string=} outputFile
  */
-function *compileNWjs(filename, outputFile)
+function *compileNWjs(version, filename, outputFile)
 {
+    if (!version)
+    {
+        var versions = yield nwjs.list();
+        versions = versions.filter(v=>!v.endsWith('-sdk'));
+        if (versions.length !== 1)
+            version = yield window.showQuickPick(versions, {placeHolder: "Select compiler version"});
+        else
+            version = versions[0];
+        if (!version) return;
+    }
     if (!filename) filename = selectedFile;
     if (!outputFile) outputFile = replaceExt(filename, '.bin');
 
-    const path = nwjs.getNwjc(nwjs.defaultVersion+'-sdk');
-    if (path === null) throw new Error(NOT_INSTALL);
-    yield run(path, [filename, outputFile], (str)=>vs.vs.log(str));
+    const path = nwjs.getNwjc(version+'-sdk');
+    if (path === null) throw new Error(NEED_INSTALL+'#'+version);
+    yield run(path, [filename, outputFile], str=>vs.log(str));
 }
 
 /**
@@ -158,15 +188,23 @@ function * makeNWjs(outdir, version, nwfile, packageJson, exclude)
 
 function * publishNWjs()
 {
-    const version = nwjs.defaultVersion;
     if (!window.activeTextEditor) return;
-    const nwjsPath = nwjs.getPath(version);
-    if (nwjsPath === null) throw new Error(NOT_INSTALL);
-    const curdir = process.cwd();
-    process.chdir(path.dirname(window.activeTextEditor.document.fileName));
 
     const config = nfs.readJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
     if (!config) throw new Error(NEED_PUBLISH_JSON);
+    var {html, files, exclude, nwjsVersion} = config;
+    if (!nwjsVersion || nwjsVersion === 'any')
+    {
+        nwjsVersion = yield nwjs.getLatestVersion();
+        if (!nwjsVersion) throw new Error(NEED_INSTALL);
+    }
+
+    
+    const nwjsPath = nwjs.getPath(nwjsVersion);
+    if (nwjsPath === null) throw new Error(NEED_INSTALL+'#'+nwjsVersion);
+    const curdir = process.cwd();
+    process.chdir(path.dirname(window.activeTextEditor.document.fileName));
+
 
     const targets = {};
     const bindir = 'bin';
@@ -174,7 +212,6 @@ function * publishNWjs()
     const packagejson = nfs.readJson('package.json', DEFAULT_PACKAGE_JSON);
     if (!packagejson) throw new Error(NEED_PACKAGE_JSON);
 
-    const {html, files, exclude} = config;
     util.override(packagejson, config.package);
 
     nfs.mkdir(bindir);
@@ -211,7 +248,7 @@ function * publishNWjs()
         const binfilename = targets[src];
         const dest = path.join(bindir, binfilename);
         nfs.mkdir(path.dirname(dest));
-        yield compileNWjs(src, dest);
+        yield compileNWjs(version, src, dest);
         appendFile(binfilename, dest);
     }
     vs.log('Add files...');
@@ -245,32 +282,33 @@ function *generatePackageJson()
 }
 
 /**
- * @param {function*()} genfunc
+ * @param {!Iterator} iterator
  * @return {!Promise}
  */
-function play(genfunc)
+function play(iterator)
 {
-    return co(genfunc())
+    return co(iterator)
     .catch((err)=>{
-        switch(err.message)
+        const [msg, param] = err.message.split('#', 2);
+        switch(msg)
         {
-        case NOT_INSTALL:
+        case NEED_INSTALL:
             return vs.errorBox('Need install NWjs!', 'Install')
             .then((select)=>{
                 if (!select) return;
-                return play(installNWjs);
+                return play(installNWjs(param));
             });
         case NEED_PUBLISH_JSON:
             return vs.errorBox('Need nwjs.publish.json!', 'Generate')
             .then((select)=>{
                 if (!select) return;
-                return play(generatePublishJson);
+                return play(generatePublishJson());
             });
         case NEED_PACKAGE_JSON:
             return vs.errorBox('Need package.json!', 'Generate')
             .then((select)=>{
                 if (!select) return;
-                return play(generatePackageJson);
+                return play(generatePackageJson());
             });
         default:
             console.error(err);
@@ -310,7 +348,7 @@ exports.activate = function (context) {
                 selectedFile = '';
                 selectedDir = '';
             }
-            play(genfunc).then(()=>{
+            play(genfunc()).then(()=>{
                 if(olddir) process.chdir(olddir);
                 process.stdout.write = stdout;
                 process.stderr.write = stderr;

@@ -12,13 +12,65 @@ const getVersions = require('nwjs-versions');
 const pget = require('pget');
 const extract = require('extract-zip');
 const pify = require('pify');
-const exists = require('path-exists');
 const figures = require('figures');
-const isSemver = require('is-semver');
 const os = require('./os');
 
+/**
+ * @param {string} version
+ */
+function splitVersionInfo(version)
+{
+    const extidx = version.indexOf('-');
+    var ext = '';
+    if (extidx !== -1)
+    {
+        ext = version.substr(extidx+1);
+        version = version.substr(0, extidx);
+    }
+    version = version.split('.').map(v=>+v);
+    return {version, ext};
+}
+
+/**
+ * @param {string} a
+ * @param {string} bin
+ * @return {number}
+ */
+function versionCompare(a, b)
+{
+    a = splitVersionInfo(a);
+    b = splitVersionInfo(b);
+    const count = Math.min(a.version.length, b.version.length);
+    for(var i=0;i<count;i++)
+    {
+        const delta = b.version[i] - a.version[i];
+        if (delta !== 0) return delta;
+    }
+    const delta = b.version.length - a.version.length;
+    if (delta !== 0) return delta;
+    return b.ext.localeCompare(a.ext);
+}
+
+/**
+ * @template T
+ * @param {T[]} array
+ * @param {function(T,T):number}
+ * @return {T|undefined}
+ */
+function getFirstOfArray(array, cmp)
+{
+    if (array.length === 0) return undefined;
+    var v = array[0];
+    for(var i=1;i<array.length;i++)
+    {
+        const v2 = array[i];
+        if (cmp(v, v2) > 0) v = v2;
+    }
+    return v;
+}
+
+
 const nwjs = module.exports = {
-    defaultVersion: '0.14.7',
     /**
      * @param {string} version
      * @return {boolean}
@@ -36,6 +88,30 @@ const nwjs = module.exports = {
         const nw = path.join(home, '.nwjs', nwjs.getName(version).fileName);
         if (!fs.existsSync(nw)) return null;
         return nw;
+    },
+    /**
+     * @param {function(string):boolean=} filter
+     * @return {!Promise<?string>}
+     */
+    getLatestVersion(filter)
+    {
+        return nwjs.list().then(vers=>{
+            if (vers.length === 0) return null;
+            if (filter) vers = vers.filter(filter);
+            return getFirstOfArray(vers, versionCompare);
+        });
+    },
+    /**
+     * @param {function(string):boolean=} filter
+     * @return {?string}
+     */
+    getLatestVersionSync(filter)
+    {
+        if (!filter) filter = ()=>true;
+        var vers = nwjs.listSync();
+        if (vers.length === 0) return null;
+        if (filter) vers = vers.filter(filter);
+        return getFirstOfArray(vers, versionCompare);
     },
     /**
      * @param {string} version
@@ -72,12 +148,41 @@ const nwjs = module.exports = {
         return path.join(root, nw);
     },
     /**
+     * @param {string} filename
+     * @return {string}
+     */
+    getVersionFromFileName(filename)
+    {
+        if (!filename.startsWith('nwjs-')) return '';
+        filename = filename.substr(5);
+        const endsWith = `-${os.platform}-${os.arch}`;
+        if (!filename.endsWith(endsWith)) return '';
+        filename = filename.substr(0, filename.length - endsWith.length);
+        if (filename.startsWith('sdk-'))
+        {
+            filename = filename.substr(4);
+            if (!filename.startsWith('v')) return '';
+            return filename.substr(1)+'-sdk';
+        }
+        else
+        {
+            if (!filename.startsWith('v')) return '';
+            return filename.substr(1);
+        }
+    },
+    /**
      * @param {string} version
      */
     getName(version)
     {
-        const realVersion = version.split('-sdk').shift();
-        const fileName = version == realVersion ? `nwjs-v${realVersion}-${os.platform}-${os.arch}` : `nwjs-sdk-v${realVersion}-${os.platform}-${os.arch}`;
+        var realVersion = version;
+        var fileName = "nwjs-";
+        if (realVersion.endsWith('-sdk'))
+        {
+            realVersion = realVersion.substr(0, realVersion.length-4);
+            fileName += 'sdk-';
+        }
+        fileName += `v${realVersion}-${os.platform}-${os.arch}`;
         const ext = os.platform === 'linux' ? 'tar.gz' : 'zip';
         const url = `http://dl.nwjs.io/v${realVersion}/${fileName}.${ext}`;
         return {realVersion, fileName, ext, url};
@@ -92,70 +197,100 @@ const nwjs = module.exports = {
         return true;
     },
     /**
+     * @param {function(string):boolean=} filter
      * @return {!Promise<!Array<string>>}
      */
-    listAll: co.wrap(function* () {
-        try
-        {
-            const versions = yield getVersions();
-            return versions.map(v => `  ${v}`);
-        }
-        catch (e)
-        {
-            console.log(e.stack);
-            throw e;
-        }
-    }),
+    listAll(filter) {
+        return co.wrap(function* () {
+            try
+            {
+                var list = yield getVersions();
+                if (filter) list = list.filter(filter);
+                return list.sort(versionCompare);
+            }
+            catch (e)
+            {
+                console.log(e.stack);
+                throw e;
+            }
+        })();
+    },
     /**
+     * @param {function(string):boolean=} filter
      * @return {!Promise<!Array<string>>}
      */
-    list: co.wrap(function* () {
+    list(filter)
+    {
+        return co.wrap(function* () {
+            try {
+                var versions = yield pify(fs).readdir(`${home}/.nwjs`);
+                versions = versions.map(v=>nwjs.getVersionFromFileName(v)).filter(v=>v);
+                if (filter) versions = versions.filter(filter);
+                return versions.sort(versionCompare);
+            } catch (e) {
+                console.log(e.stack);
+                throw e;
+            }
+        })();
+    },
+    /**
+     * @param {function(string):boolean=} filter
+     * @return {!Array<string>}
+     */
+    listSync(filter)
+    {
         try {
-            const versions = yield pify(fs).readdir(`${home}/.nwjs`);
-            return versions.filter(v => isSemver(v)).map(v => `  ${v}`);
+            var versions = fs.readdirSync(`${home}/.nwjs`);
+            versions = versions.map(v=>nwjs.getVersionFromFileName(v)).filter(v=>v);
+            if (filter) versions = versions.filter(filter);
+            return versions.sort(versionCompare);
         } catch (e) {
             console.log(e.stack);
             throw e;
         }
-    }),
+    },
 
     /**
      * @param {string} version
      * @return {!Promise<boolean>}
      */
-    install: co.wrap(function* (version) {
-        try {
-            console.log("Download NWjs("+version+")...");
+    install(version)
+    {
+        return co.wrap(function* ()
+        {
+            try {
+                console.log("Download NWjs("+version+")...");
+                if (nwjs.exists(version)) return false;
 
-            if (nwjs.exists(version)) return false;
+                // Create cache dir
+                const cacheDir = path.join(home, '.nwjs');
+                try { fs.mkdirSync(cacheDir); } catch(e) {}
+                const name = nwjs.getName(version);
+                // Download the nwjs
+                yield pget(name.url, {dir: cacheDir, target: `${version}.${name.ext}`, verbose: true, proxy: process.env.HTTP_PROXY});
+                // extract both zip and tarball
+                const from = `${cacheDir}/${version}.${name.ext}`;
+                if (os.platform === 'linux')
+                {
+                    exec(`tar -xzvf ${from} -C ${cacheDir}`, {silent: true});
+                }
+                else
+                {
+                    yield pify(extract)(from, {dir: cacheDir});
+                }
+                // remove zip
 
-            // Create cache dir
-            const cacheDir = path.join(home, '.nwjs');
-            try { fs.mkdirSync(cacheDir); } catch(e) {}
-            // check if has cached nwjs in this version
-            if (exists.sync(`${cacheDir}/${version}`)) {
-            return console.log(`A cached nwjs already located in ${cacheDir}/${version}`.red);
+                fs.unlinkSync(from);
+                // print success info
+                console.log(`${figures.tick} Version ${version} is installed and activated`);
+                return true;
             }
-            const name = nwjs.getName(version);
-            // Download the nwjs
-            yield pget(name.url, {dir: cacheDir, target: `${version}.${name.ext}`, verbose: true, proxy: process.env.HTTP_PROXY});
-            // extract both zip and tarball
-            const from = `${cacheDir}/${version}.${name.ext}`;
-            if (os.platform === 'linux') {
-            exec(`tar -xzvf ${from} -C ${cacheDir}`, {silent: true});
-            } else {
-            yield pify(extract)(from, {dir: cacheDir});
+            catch (e)
+            {
+                console.log(`Failed to install ${figures.cross} Version ${version}`);
+                console.log(e.stack);
+                throw e;
             }
-            // remove zip
-
-            fs.unlinkSync(from);
-            // print success info
-            console.log(`${figures.tick} Version ${version} is installed and activated`.green);
-            return true;
-        } catch (e) {
-            console.log(`Failed to install ${figures.cross} Version ${version}`.red);
-            console.log(e.stack);
-            throw e;
-        }
-    })
+        })();
+    }
 };

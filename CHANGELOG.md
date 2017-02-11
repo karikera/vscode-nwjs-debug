@@ -1,5 +1,8 @@
+# 0.0.17
+* Add version selection feature
+
 # 0.0.16
-* Update to vscode-chrome-debug-core@3.12.
+* Update to vscode-chrome-debug-core@3.12.6
 
 # 0.0.14
 * Update to vscode-chrome-debug-core@3.12.5

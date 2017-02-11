@@ -3,12 +3,6 @@
  *--------------------------------------------------------*/
 
 const {logger} = require('../../node_modules/vscode-chrome-debug-core');
-const nwjs = require('../nwjs/nwjs');
-
-
-function getBrowserPath() {
-	return nwjs.getPath(nwjs.defaultVersion+'-sdk');
-}
 
 class DebounceHelper {
 
@@ -44,7 +38,6 @@ class DebounceHelper {
 }
 
 const utils = {
-	getBrowserPath: getBrowserPath,
     DebounceHelper: DebounceHelper,
     getAllFunctions(obj)
     {

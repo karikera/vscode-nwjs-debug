@@ -10,17 +10,35 @@ English is not my mother tongue; please excuse any errors on my part.
 
 Need to install when first run
 
-![Install command screenshot](img/install.png)
+![Install command](img/install.png)
 
-After install
+Select need version
 
-![run screenshot](img/run.png)
+![Select version](img/selver.png)
+
+Wait install
+
+![Installing](img/installing.png)
+
+Launch NWjs
+
+![run](img/run.png)
 
 Shortcut is `F5`
 
+## Use with multiple version
+
+Set version in launch.json. Use latest version by default
+
+![launchver](img/launchver.png)
+
+Set version in nwjs.publish.json. Use latest version by default
+
+![publishver](img/publishver.png)
+
 ## Commands
-* `NWjs Install(0.14.7 and SDK)` : Download NWjs and install
-* `NWjs Remove(0.14.7 and SDK)` : Remove NWjs
+* `NWjs Install` : Download NWjs and install
+* `NWjs Remove` : Remove NWjs
 * `NWjs Publish` : Generate `publish` directory and copy NWjs for publish
 * `NWjs Compile` : Compile javascript with `nwjc`
 

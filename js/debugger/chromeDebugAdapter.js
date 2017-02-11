@@ -7,6 +7,7 @@ const {spawn} = require('child_process');
 
 const utils = require('./utils');
 const nfs = require('../nfs');
+const nwjs = require('../nwjs/nwjs');
 
 const DefaultWebSourceMapPathOverrides = {
     'webpack:///./*': '${webRoot}/*',
@@ -39,10 +40,26 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
         const that = this;
         return super.launch(args).then(() => {
             // Check exists?
-            const chromePath = args.runtimeExecutable || utils.getBrowserPath();
-            if (!chromePath) 
+            var chromePath = args.runtimeExecutable;
+            if (!chromePath)
             {
-                return coreUtils.errP(`Need to install NWjs! - Please use "NWjs Install" command.`);
+                const version = args.nwjsVersion;
+                if (version && version !== 'any')
+                {
+                    chromePath = nwjs.getPath(version + '-sdk');
+                    if (!chromePath) 
+                    {
+                        return coreUtils.errP(`Need to install NWjs ${version}! - Please use "NWjs Install" command.`);
+                    }
+                }
+                else
+                {
+                    chromePath = nwjs.getPath(nwjs.getLatestVersionSync(v=>v.endsWith('-sdk')));
+                    if (!chromePath) 
+                    {
+                        return coreUtils.errP(`Need to install NWjs! - Please use "NWjs Install" command.`);
+                    }
+                }
             }
 
             // Start with remote debugging enabled

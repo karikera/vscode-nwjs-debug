@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "icon": "img/logo.png",
   "description": "NWjs Debugger",
   "author": {
@@ -30,9 +30,7 @@
     "extract-zip": "^1.6.0",
     "figures": "^1.4.0",
     "glob-all": "^3.1.0",
-    "is-semver": "^1.0.0",
     "nwjs-versions": "0.0.3",
-    "path-exists": "^1.0.0",
     "pget": "0.0.0",
     "pify": "^2.3.0",
     "shelljs": "^0.6.0",
@@ -41,7 +39,7 @@
   "devDependencies": {
     "typescript": "^2.2.0",
     "eslint": "^3.15.0",
-    "@types/node": "^6.0.62"
+    "@types/node": "^6.0.63"
   },
   "main": "./js/command",
   "activationEvents": [
@@ -68,11 +66,11 @@
     "commands": [
       {
         "command": "vscode-nwjs.install",
-        "title": "NWjs Install(0.14.7 and SDK)"
+        "title": "NWjs Install"
       },
       {
         "command": "vscode-nwjs.remove",
-        "title": "NWjs Remove(0.14.7 and SDK)"
+        "title": "NWjs Remove"
       },
       {
         "command": "vscode-nwjs.publish",
@@ -105,14 +103,16 @@
             "type": "nwjs",
             "request": "launch",
             "name": "Launch NWJS",
-            "webRoot": "${workspaceRoot}"
+            "webRoot": "${workspaceRoot}",
+            "nwjsVersion": "any"
           },
           {
             "type": "nwjs",
             "request": "attach",
             "name": "Attach to Chrome",
             "port": 9222,
-            "webRoot": "${workspaceRoot}"
+            "webRoot": "${workspaceRoot}",
+            "nwjsVersion": "any"
           }
         ],
         "configurationSnippets": [
@@ -123,7 +123,8 @@
 							"type": "nwjs",
 							"request": "launch",
 							"name": "${2:Launch NWjs}",
-							"webRoot": "^\"\\${workspaceRoot}\""
+							"webRoot": "^\"\\${workspaceRoot}\"",
+                            "nwjsVersion": "any"
             }
           },
           {
@@ -134,7 +135,8 @@
 							"request": "launch",
 							"name": "${2:Launch NWjs}",
 							"webRoot": "^\"\\${workspaceRoot}\"",
-              "userDataDir": "^\"\\${workspaceRoot}/.vscode/nwjs\""
+              "userDataDir": "^\"\\${workspaceRoot}/.vscode/nwjs\"",
+                            "nwjsVersion": "any"
 						}
 					}
         ],
@@ -151,6 +153,11 @@
                 "type": "string",
                 "description": "This specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
+              },
+              "nwjsVersion": {
+                "type": "string",
+                "description": "Using NWjs version",
+                "default": "any"
               },
               "pathMapping": {
                 "type": "object",
@@ -249,6 +256,11 @@
                 "type": "string",
                 "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
+              },
+              "nwjsVersion": {
+                "type": "string",
+                "description": "Using NWjs version",
+                "default": "any"
               },
               "pathMapping": {
                 "type": "object",
