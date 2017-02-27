@@ -10,9 +10,13 @@ English is not my mother tongue; please excuse any errors on my part.
 
 Need to install when first run
 
+You can open `command palette` with `F1` or `Ctrl + Shift + P`
+
+Type `nwjs` to `command palette`
+
 ![Install command](img/install.png)
 
-Select need version
+Select version, It takes a little while to open.
 
 ![Select version](img/selver.png)
 
@@ -28,11 +32,11 @@ Shortcut is `F5`
 
 ## Use with multiple version
 
-Set version in launch.json. Use latest version by default
+You can set version in `launch.json`. Use latest version by default
 
 ![launchver](img/launchver.png)
 
-Set version in nwjs.publish.json. Use latest version by default
+You can set version in `nwjs.publish.json` also.
 
 ![publishver](img/publishver.png)
 
