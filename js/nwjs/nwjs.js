@@ -202,17 +202,9 @@ const nwjs = module.exports = {
      */
     listAll(filter) {
         return co.wrap(function* () {
-            try
-            {
-                var list = yield getVersions();
-                if (filter) list = list.filter(filter);
-                return list.sort(versionCompare);
-            }
-            catch (e)
-            {
-                console.log(e.stack);
-                throw e;
-            }
+            var list = yield getVersions();
+            if (filter) list = list.filter(filter);
+            return list.sort(versionCompare);
         })();
     },
     /**
@@ -222,15 +214,10 @@ const nwjs = module.exports = {
     list(filter)
     {
         return co.wrap(function* () {
-            try {
-                var versions = yield pify(fs).readdir(`${home}/.nwjs`);
-                versions = versions.map(v=>nwjs.getVersionFromFileName(v)).filter(v=>v);
-                if (filter) versions = versions.filter(filter);
-                return versions.sort(versionCompare);
-            } catch (e) {
-                console.log(e.stack);
-                throw e;
-            }
+            var versions = yield pify(fs).readdir(`${home}/.nwjs`).catch(()=>[]);
+            versions = versions.map(v=>nwjs.getVersionFromFileName(v)).filter(v=>v);
+            if (filter) versions = versions.filter(filter);
+            return versions.sort(versionCompare);
         })();
     },
     /**
@@ -239,15 +226,10 @@ const nwjs = module.exports = {
      */
     listSync(filter)
     {
-        try {
-            var versions = fs.readdirSync(`${home}/.nwjs`);
-            versions = versions.map(v=>nwjs.getVersionFromFileName(v)).filter(v=>v);
-            if (filter) versions = versions.filter(filter);
-            return versions.sort(versionCompare);
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
-        }
+        var versions = fs.readdirSync(`${home}/.nwjs`);
+        versions = versions.map(v=>nwjs.getVersionFromFileName(v)).filter(v=>v);
+        if (filter) versions = versions.filter(filter);
+        return versions.sort(versionCompare);
     },
 
     /**
@@ -258,39 +240,31 @@ const nwjs = module.exports = {
     {
         return co.wrap(function* ()
         {
-            try {
-                console.log("Download NWjs("+version+")...");
-                if (nwjs.exists(version)) return false;
+            console.log("Download NWjs("+version+")...");
+            if (nwjs.exists(version)) return false;
 
-                // Create cache dir
-                const cacheDir = path.join(home, '.nwjs');
-                try { fs.mkdirSync(cacheDir); } catch(e) {}
-                const name = nwjs.getName(version);
-                // Download the nwjs
-                yield pget(name.url, {dir: cacheDir, target: `${version}.${name.ext}`, verbose: true, proxy: process.env.HTTP_PROXY});
-                // extract both zip and tarball
-                const from = `${cacheDir}/${version}.${name.ext}`;
-                if (os.platform === 'linux')
-                {
-                    exec(`tar -xzvf ${from} -C ${cacheDir}`, {silent: true});
-                }
-                else
-                {
-                    yield pify(extract)(from, {dir: cacheDir});
-                }
-                // remove zip
-
-                fs.unlinkSync(from);
-                // print success info
-                console.log(`${figures.tick} Version ${version} is installed and activated`);
-                return true;
-            }
-            catch (e)
+            // Create cache dir
+            const cacheDir = path.join(home, '.nwjs');
+            try { fs.mkdirSync(cacheDir); } catch(e) {}
+            const name = nwjs.getName(version);
+            // Download the nwjs
+            yield pget(name.url, {dir: cacheDir, target: `${version}.${name.ext}`, verbose: true, proxy: process.env.HTTP_PROXY});
+            // extract both zip and tarball
+            const from = `${cacheDir}/${version}.${name.ext}`;
+            if (os.platform === 'linux')
             {
-                console.log(`Failed to install ${figures.cross} Version ${version}`);
-                console.log(e.stack);
-                throw e;
+                exec(`tar -xzvf ${from} -C ${cacheDir}`, {silent: true});
             }
+            else
+            {
+                yield pify(extract)(from, {dir: cacheDir});
+            }
+            // remove zip
+
+            fs.unlinkSync(from);
+            // print success info
+            console.log(`${figures.tick} Version ${version} is installed and activated`);
+            return true;
         })();
     }
 };

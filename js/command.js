@@ -248,7 +248,7 @@ function * publishNWjs()
         const binfilename = targets[src];
         const dest = path.join(bindir, binfilename);
         nfs.mkdir(path.dirname(dest));
-        yield compileNWjs(version, src, dest);
+        yield compileNWjs(nwjsVersion, src, dest);
         appendFile(binfilename, dest);
     }
     vs.log('Add files...');
@@ -264,7 +264,7 @@ function * publishNWjs()
     yield nfs.eventToPromise(zipfos, 'close');
 
     vs.log('Generate exe...');
-    yield * makeNWjs(publishdir,version,zippath,packagejson, exclude);
+    yield * makeNWjs(publishdir,nwjsVersion,zippath,packagejson, exclude);
     process.chdir(curdir);
     vs.log('Complete');
 }
@@ -311,8 +311,8 @@ function play(iterator)
                 return play(generatePackageJson());
             });
         default:
-            console.error(err);
-            vs.errorBox(err);
+            console.error(err.stack);
+            vs.errorBox(err.message);
             break;
         }
     });
@@ -323,37 +323,45 @@ exports.activate = function (context) {
     function regist(command, genfunc)
     {
         const disposable = commands.registerCommand(command, ()=>{
-            if (onProgress)
+            try
             {
+                if (onProgress)
+                {
+                    vs.show();
+                    return;
+                }
+                onProgress = true;
+                vs.clear();
                 vs.show();
-                return;
+                const stdout = process.stdout.write;
+                const stderr = process.stderr.write;
+                process.stdout.write = new vs.ChannelStream().bindWrite();
+                process.stderr.write = new vs.ChannelStream().bindWrite();
+                var olddir = '';
+                if (window.activeTextEditor)
+                {
+                    selectedFile = window.activeTextEditor.document.fileName;
+                    selectedDir = path.dirname(selectedFile);
+                    olddir = process.cwd();
+                    process.chdir(selectedDir);
+                }
+                else
+                {
+                    selectedFile = '';
+                    selectedDir = '';
+                }
+                play(genfunc()).then(()=>{
+                    if(olddir) process.chdir(olddir);
+                    process.stdout.write = stdout;
+                    process.stderr.write = stderr;
+                    onProgress = false;
+                });
             }
-            onProgress = true;
-            vs.clear();
-            vs.show();
-            const stdout = process.stdout.write;
-            const stderr = process.stderr.write;
-            process.stdout.write = new vs.ChannelStream().bindWrite();
-            process.stderr.write = new vs.ChannelStream().bindWrite();
-            var olddir = '';
-            if (window.activeTextEditor)
+            catch(err)
             {
-                selectedFile = window.activeTextEditor.document.fileName;
-                selectedDir = path.dirname(selectedFile);
-                olddir = process.cwd();
-                process.chdir(selectedDir);
+                console.error(err.stack);
+                vs.errorBox(err.message);
             }
-            else
-            {
-                selectedFile = '';
-                selectedDir = '';
-            }
-            play(genfunc()).then(()=>{
-                if(olddir) process.chdir(olddir);
-                process.stdout.write = stdout;
-                process.stderr.write = stderr;
-                onProgress = false;
-            });
         });
         context.subscriptions.push(disposable);
     }

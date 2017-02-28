@@ -1,3 +1,6 @@
+# 0.0.19
+* Fix first using problem
+
 # 0.0.18
 * Upddate to vscode-chrome-debug-core@3.12.8
 
