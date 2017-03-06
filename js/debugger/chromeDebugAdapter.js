@@ -94,7 +94,7 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
             });
 
             return args.noDebug ? undefined :
-                this.doAttach(port, launchUrl, undefined /* args.address */, args.timeout);
+                this.doAttach(port, launchUrl, '127.0.0.1' /* args.address */, args.timeout);
         });
     }
 

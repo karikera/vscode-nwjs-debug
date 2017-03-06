@@ -1,5 +1,6 @@
 # 0.0.20
 * Fix download output more beautifully
+* Update to vscode-chrome-debug-core@3.13.1
 
 # 0.0.19
 * Fix first using problem
