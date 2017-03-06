@@ -1,8 +1,8 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "0.0.19",
-  "icon": "img/logo.png",
+  "version": "0.0.20",
+  "icon": "img/icon.png",
   "description": "NWjs Debugger",
   "author": {
     "name": "ruakr"
@@ -31,9 +31,9 @@
     "shelljs": "^0.6.0",
     "user-home": "^2.0.0",
     "vscode": "^1.0.5",
-    "vscode-chrome-debug-core": "3.12.8",
-    "vscode-debugadapter": "^1.17.0",
-    "vscode-debugprotocol": "^1.17.0"
+    "vscode-chrome-debug-core": "3.13.1",
+    "vscode-debugadapter": "^1.18.0-pre.0",
+    "vscode-debugprotocol": "^1.17.0-pre.2"
   },
   "devDependencies": {
     "typescript": "^2.2.1",
@@ -128,7 +128,7 @@
           },
           {
             "label": "NWjs: Launch with userDataDir",
-            "description": "Launch NWjs with a separate userDataDir, useful when another instance is already running",
+            "description": "Launch NWjs with a separate userDataDir",
             "body": {
               "type": "nwjs",
               "request": "launch",
@@ -189,12 +189,26 @@
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
               },
               "verboseDiagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "trace": {
+                "type": [
+                  "boolean",
+                  "string"
+                ],
+                "enum": [
+                  "verbose",
+                  true
+                ],
+                "default": true,
+                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "userDataDir": {
                 "type": "string",
@@ -215,6 +229,11 @@
                 "type": "array",
                 "description": "An array of file or folder names, or path globs, to skip when debugging.",
                 "default": []
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "default": 10000
               }
             }
           },
@@ -241,12 +260,26 @@
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
               },
               "verboseDiagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "trace": {
+                "type": [
+                  "boolean",
+                  "string"
+                ],
+                "enum": [
+                  "verbose",
+                  true
+                ],
+                "default": true,
+                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "url": {
                 "type": "string",
@@ -282,6 +315,11 @@
                 "type": "array",
                 "description": "An array of file or folder names, or path globs, to skip when debugging.",
                 "default": []
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "default": 10000
               }
             }
           }

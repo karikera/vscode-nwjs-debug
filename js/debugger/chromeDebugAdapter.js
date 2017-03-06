@@ -94,7 +94,7 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
             });
 
             return args.noDebug ? undefined :
-                this.doAttach(port, launchUrl); // , args.address);
+                this.doAttach(port, launchUrl, undefined /* args.address */, args.timeout);
         });
     }
 
@@ -126,7 +126,10 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     runConnection() {
-        return [...super.runConnection(), this.chrome.Page.enable()];
+        return [
+            ...super.runConnection(),
+            this.chrome.Page.enable()
+        ];
     }
 
     onPaused(notification, expectingStopReason) {
@@ -140,10 +143,13 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     disconnect() {
-        if (this._chromeProc) {
+        if (this._chromeProc && !this._hasTerminated) {
+            // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
+            // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             this._chromeProc.kill('SIGINT');
-            this._chromeProc = null;
         }
+
+        this._chromeProc = null;
 
         return super.disconnect();
     }
