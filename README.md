@@ -2,8 +2,6 @@
 
 Forked from `Debugger for Chrome`
 
-NWjs version: `v0.14.7-sdk`
-
 English is not my mother tongue; please excuse any errors on my part.
 
 ## Install

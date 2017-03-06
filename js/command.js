@@ -65,6 +65,7 @@ function *installNWjs(version)
     var downloaded = false;
     downloaded = (yield nwjs.install(version)) || downloaded;
     downloaded = (yield nwjs.install(version+'-sdk')) || downloaded;
+    vs.clear();
     if(downloaded) vs.infoBox("Install complete");
     else vs.infoBox("NWjs already installed");
 }

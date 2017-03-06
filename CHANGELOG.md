@@ -1,3 +1,6 @@
+# 0.0.20
+* Fix download output more beautifully
+
 # 0.0.19
 * Fix first using problem
 

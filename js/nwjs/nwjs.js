@@ -9,11 +9,11 @@ const co = require('co');
 const path = require('path');
 const fs = require('fs');
 const getVersions = require('nwjs-versions');
-const pget = require('pget');
+const nugget = require('nugget')
 const extract = require('extract-zip');
 const pify = require('pify');
-const figures = require('figures');
 const os = require('./os');
+
 
 /**
  * @param {string} version
@@ -247,8 +247,10 @@ const nwjs = module.exports = {
             const cacheDir = path.join(home, '.nwjs');
             try { fs.mkdirSync(cacheDir); } catch(e) {}
             const name = nwjs.getName(version);
+
             // Download the nwjs
-            yield pget(name.url, {dir: cacheDir, target: `${version}.${name.ext}`, verbose: true, proxy: process.env.HTTP_PROXY});
+            yield pify(nugget)(name.url, {dir: cacheDir, target: `${version}.${name.ext}`, verbose: true, proxy: process.env.HTTP_PROXY});
+
             // extract both zip and tarball
             const from = `${cacheDir}/${version}.${name.ext}`;
             if (os.platform === 'linux')
@@ -259,11 +261,12 @@ const nwjs = module.exports = {
             {
                 yield pify(extract)(from, {dir: cacheDir});
             }
-            // remove zip
 
+            // remove zip
             fs.unlinkSync(from);
+            
             // print success info
-            console.log(`${figures.tick} Version ${version} is installed and activated`);
+            console.log(`Version ${version} is installed and activated`);
             return true;
         })();
     }
