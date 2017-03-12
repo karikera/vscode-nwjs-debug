@@ -1,3 +1,6 @@
+# 0.0.21
+* Add something missing
+
 # 0.0.20
 * Fix download output more beautifully
 * Update to vscode-chrome-debug-core@3.13.1

@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "icon": "img/icon.png",
   "description": "NWjs Debugger",
   "author": {
@@ -20,6 +20,9 @@
     "Debuggers"
   ],
   "license": "UNLICENSED",
+  "scripts": {
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
   "dependencies": {
     "archiver": "^1.3.0",
     "co": "^4.6.0",
