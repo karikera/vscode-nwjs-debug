@@ -33,15 +33,15 @@
     "pify": "^2.3.0",
     "shelljs": "^0.6.0",
     "user-home": "^2.0.0",
-    "vscode": "^1.0.5",
+    "vscode": "^1.1.0",
     "vscode-chrome-debug-core": "3.13.1",
-    "vscode-debugadapter": "^1.18.0-pre.0",
+    "vscode-debugadapter": "^1.18.0-pre.4",
     "vscode-debugprotocol": "^1.17.0-pre.2"
   },
   "devDependencies": {
     "typescript": "^2.2.1",
-    "eslint": "^3.17.0",
-    "@types/node": "^6.0.64"
+    "eslint": "^3.18.0",
+    "@types/node": "^6.0.65"
   },
   "main": "./js/command",
   "activationEvents": [

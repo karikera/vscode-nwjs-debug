@@ -18,7 +18,8 @@ Select version, It takes a little while to open.
 
 ![Select version](img/selver.png)
 
-Wait install
+It will start the installation at `UserDir/.nwjs/version-names-nwjs`.
+Wait install.
 
 ![Installing](img/installing.png)
 
