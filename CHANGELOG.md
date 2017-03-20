@@ -1,3 +1,7 @@
+# 0.0.22
+* Update to vscode-chrome-debug-core@3.14.7
+* Set version to 1.0.0 without much meaning
+
 # 0.0.21
 * Add something missing
 

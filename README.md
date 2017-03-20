@@ -12,20 +12,20 @@ You can open `command palette` with `F1` or `Ctrl + Shift + P`
 
 Type `nwjs` to `command palette`
 
-![Install command](img/install.png)
+![Install command](images/install.png)
 
 Select version, It takes a little while to open.
 
-![Select version](img/selver.png)
+![Select version](images/selver.png)
 
 It will start the installation at `UserDir/.nwjs/version-names-nwjs`.
 Wait install.
 
-![Installing](img/installing.png)
+![Installing](images/installing.png)
 
 Launch NWjs
 
-![run](img/run.png)
+![run](images/run.png)
 
 Shortcut is `F5`
 
@@ -33,11 +33,11 @@ Shortcut is `F5`
 
 You can set version in `launch.json`. Use latest version by default
 
-![launchver](img/launchver.png)
+![launchver](images/launchver.png)
 
 You can set version in `nwjs.publish.json` also.
 
-![publishver](img/publishver.png)
+![publishver](images/publishver.png)
 
 ## Commands
 * `NWjs Install` : Download NWjs and install
