@@ -94,11 +94,15 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
             });
 
             return args.noDebug ? undefined :
-                this.doAttach(port, launchUrl, '127.0.0.1' /* args.address */, args.timeout);
+                this.doAttach(port, launchUrl || args.urlFilter, '127.0.0.1' /* args.address */, args.timeout);
         });
     }
 
     attach(args) {
+        if (args.urlFilter) {
+            args.url = args.urlFilter;
+        }
+
         return super.attach(args);
     }
 
@@ -121,14 +125,19 @@ class ChromeDebugAdapter extends CoreDebugAdapter {
             this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
                 .then(
                     evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
-                    err => logger.log('Getting userAgent failed: ' + err.message));
+                    err => logger.log('Getting userAgent failed: ' + err.message))
+                .then(() => {
+                    const cacheDisabled = (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache || false;
+                    this.chrome.Network.setCacheDisabled({ cacheDisabled });
+                });
         });
     }
 
     runConnection() {
         return [
             ...super.runConnection(),
-            this.chrome.Page.enable()
+            this.chrome.Page.enable(),
+            this.chrome.Network.enable({})
         ];
     }
 

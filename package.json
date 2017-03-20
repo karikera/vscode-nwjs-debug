@@ -1,8 +1,8 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "0.0.21",
-  "icon": "img/icon.png",
+  "version": "0.0.22",
+  "icon": "images/icon.png",
   "description": "NWjs Debugger",
   "author": {
     "name": "ruakr"
@@ -34,14 +34,27 @@
     "shelljs": "^0.6.0",
     "user-home": "^2.0.0",
     "vscode": "^1.1.0",
-    "vscode-chrome-debug-core": "3.13.1",
+    "vscode-chrome-debug-core": "3.14.7",
     "vscode-debugadapter": "^1.18.0-pre.4",
-    "vscode-debugprotocol": "^1.17.0-pre.2"
+    "vscode-debugprotocol": "^1.18.0-pre.2"
   },
   "devDependencies": {
     "typescript": "^2.2.1",
     "eslint": "^3.18.0",
     "@types/node": "^6.0.65"
+  },
+  "scripts": {
+    "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\"",
+    "build:debugadapter": "webpack",
+    "build:test": "tsc -p test/tsconfig.json",
+    "watch": "concurrently \"npm run watch:debugadapter\" \"npm run watch:test\"",
+    "watch:debugadapter": "webpack -w",
+    "watch:test": "tsc -p test/tsconfig.json -w",
+    "test": "mocha --timeout 20000 -s 2000 -u tdd --colors './out/test/*.test.js'",
+    "intTest": "mocha --timeout 20000 -s 3500 -u tdd --colors --reporter out/test/int/loggingReporter.js ./out/test/int/*.test.js",
+    "lint": "tslint -t verbose 'src/**/*.ts'",
+    "vscode:prepublish": "gulp verify-no-linked-modules",
+    "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "main": "./js/command",
   "activationEvents": [
@@ -237,6 +250,16 @@
                 "type": "number",
                 "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
                 "default": 10000
+              },
+              "disableNetworkCache": {
+                "type": "boolean",
+                "description": "Controls whether to skip the network cache for each request",
+                "default": true
+              },
+              "urlFilter": {
+                "type": "string",
+                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "default": ""
               }
             }
           },
@@ -323,6 +346,16 @@
                 "type": "number",
                 "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
                 "default": 10000
+              },
+              "disableNetworkCache": {
+                "type": "boolean",
+                "description": "Controls whether to skip the network cache for each request",
+                "default": true
+              },
+              "urlFilter": {
+                "type": "string",
+                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "default": ""
               }
             }
           }
