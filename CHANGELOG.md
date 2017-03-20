@@ -1,4 +1,7 @@
-# 0.0.22
+# 1.0.1
+* fix README.md
+
+# 1.0.0
 * Update to vscode-chrome-debug-core@3.14.7
 * Set version to 1.0.0 without much meaning
 
