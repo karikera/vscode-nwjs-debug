@@ -9,7 +9,7 @@ const {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer}
 const ChromeDebugAdapter = require('./chromeDebugAdapter');
 
 const EXTENSION_NAME = 'vsc-nwjs';
-const targetFilter = (target) => target && (!target.type || target.type === 'page');
+const targetFilter = (target) => target && (!target.type || target.type === 'page' || target.type === 'app');
 
 // Injected by webpack
 const VERSION = require('../../package.json').version;

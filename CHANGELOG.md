@@ -1,3 +1,6 @@
+# 1.0.2
+* Fix `no target pages found` problem
+
 # 1.0.1
 * fix README.md
 
