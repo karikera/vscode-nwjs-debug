@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": false,
+        "removeComments": false,
+        "target": "ES6",
+        "sourceMap": true,
+        "outDir": "out",
+        "noImplicitThis": true,
+        "strictNullChecks": true
+    },
+    "exclude": [
+        "node_modules",
+        "!node_modules/@types",
+        "testapp/",
+        "testdata/",
+        "test/"
+    ]
+}

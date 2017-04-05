@@ -1,0 +1,20 @@
+{
+    "version": "0.1.0",
+    "command": "npm",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
+    "tasks": [
+        {
+            "taskName": "watch",
+            "args": ["run", "watch"],
+            "isBuildCommand": true,
+            "isWatching": true
+        },
+        {
+            "taskName": "watch:test",
+            "args": ["run", "watch:test"],
+            "isWatching": true
+        }
+    ]
+}

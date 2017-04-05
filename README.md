@@ -2,25 +2,46 @@
 
 Forked from `Debugger for Chrome`
 
-NWjs version: `v0.14.7-sdk`
-
 English is not my mother tongue; please excuse any errors on my part.
 
 ## Install
 
 Need to install when first run
 
-![Install command screenshot](img/install.png)
+You can open `command palette` with `F1` or `Ctrl + Shift + P`
 
-After install
+Type `nwjs` to `command palette`
 
-![run screenshot](img/run.png)
+![Install command](images/install.png)
+
+Select version, It takes a little while to open.
+
+![Select version](images/selver.png)
+
+It will start the installation at `UserDir/.nwjs/version-names-nwjs`.
+Wait install.
+
+![Installing](images/installing.png)
+
+Launch NWjs
+
+![run](images/run.png)
 
 Shortcut is `F5`
 
+## Use with multiple version
+
+You can set version in `launch.json`. Use latest version by default
+
+![launchver](images/launchver.png)
+
+You can set version in `nwjs.publish.json` also.
+
+![publishver](images/publishver.png)
+
 ## Commands
-* `NWjs Install(0.14.7 and SDK)` : Download NWjs and install
-* `NWjs Remove(0.14.7 and SDK)` : Remove NWjs
+* `NWjs Install` : Download NWjs and install
+* `NWjs Remove` : Remove NWjs
 * `NWjs Publish` : Generate `publish` directory and copy NWjs for publish
 * `NWjs Compile` : Compile javascript with `nwjc`
 

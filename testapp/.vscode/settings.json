@@ -1,10 +1,9 @@
 {
     "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
     "files.exclude": {
         ".git": true,
-        "bin": true,
-        "node_modules": false,
-        "testapp/.vscode/chrome": true
+        "bin": true
     },
     "search.exclude": {
         ".git": true,

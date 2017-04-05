@@ -1,0 +1,37 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
+
+import * as path from 'path';
+import {utils as coreUtils} from 'vscode-chrome-debug-core';
+
+export class DebounceHelper {
+    private waitToken: NodeJS.Timer;
+
+    constructor(private timeoutMs: number) { }
+
+    /**
+     * If not waiting already, call fn after the timeout
+     */
+    public wait(fn: () => any): void {
+        if (!this.waitToken) {
+            this.waitToken = setTimeout(() => {
+                this.waitToken = null;
+                fn();
+            },
+                this.timeoutMs);
+        }
+    }
+
+    /**
+     * If waiting for something, cancel it and call fn immediately
+     */
+    public doAndCancel(fn: () => any): void {
+        if (this.waitToken) {
+            clearTimeout(this.waitToken);
+            this.waitToken = null;
+        }
+
+        fn();
+    }
+}
