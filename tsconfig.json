@@ -6,8 +6,7 @@
         "target": "ES6",
         "sourceMap": true,
         "outDir": "out",
-        "noImplicitThis": true,
-        "strictNullChecks": true
+        "noImplicitThis": true
     },
     "exclude": [
         "node_modules",

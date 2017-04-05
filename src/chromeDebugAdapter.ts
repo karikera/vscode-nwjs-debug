@@ -2,15 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ICommonRequestArgs} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ILaunchRequestArgs, IAttachRequestArgs} from './chromeDebugInterfaces';
-import * as utils from './util/utils';
-import * as nfs from '../util/nfs';
-import * as nwjs from '../nwjs/nwjs';
+import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
+import * as utils from './utils';
+import * as nfs from './util/nfs';
+import * as nwjs from './nwjs/nwjs';
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///./*': '${webRoot}/*',
@@ -39,9 +39,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public launch(args: ILaunchRequestArgs): Promise<void> {
         return super.launch(args).then(() => {
             // Check exists?
-            const chromePath = args.runtimeExecutable;
-            if (!chromePath)
-            {
+            var chromePath = args.runtimeExecutable;
+            if (!chromePath) {
                 const version = args.nwjsVersion;
                 if (version && version !== 'any')
                 {
@@ -105,11 +104,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             });
 
             return args.noDebug ? undefined :
-                this.doAttach(port, launchUrl, args.address);
+                this.doAttach(port, launchUrl || args.urlFilter, args.address, args.timeout);
         });
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
+        if (args.urlFilter) {
+            args.url = args.urlFilter;
+        }
+
         return super.attach(args);
     }
 
@@ -132,15 +135,23 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
                 .then(
                     evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
-                    err => logger.log('Getting userAgent failed: ' + err.message));
+                    err => logger.log('Getting userAgent failed: ' + err.message))
+                .then(() => {
+                    const cacheDisabled = (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache || false;
+                    this.chrome.Network.setCacheDisabled({ cacheDisabled });
+                });
         });
     }
 
     protected runConnection(): Promise<void>[] {
-        return [...super.runConnection(), this.chrome.Page.enable()];
+        return [
+            ...super.runConnection(),
+            this.chrome.Page.enable(),
+            this.chrome.Network.enable({})
+        ];
     }
 
-    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: string): void {
+    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: stoppedEvent.ReasonType): void {
         this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
         super.onPaused(notification, expectingStopReason);
     }
@@ -155,10 +166,13 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public disconnect(): void {
-        if (this._chromeProc) {
+        if (this._chromeProc && !this._hasTerminated) {
+            // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
+            // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             this._chromeProc.kill('SIGINT');
-            this._chromeProc = null;
         }
+
+        this._chromeProc = null;
 
         return super.disconnect();
     }
@@ -169,14 +183,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public restart(): Promise<void> {
         return this.chrome.Page.reload({ ignoreCache: true });
     }
-
-    shouldIgnoreScript(args) {
-        return false;
-        //return super.shouldIgnoreScript(args);
-        // This ignore chrome-extention path
-        // but nwjs contains local storage as chrome-extension
-    }
 }
+
+// Force override
+(<any>ChromeDebugAdapter).prototype.shouldIgnoreScript = function(args) {
+    return false;
+    //return super.shouldIgnoreScript(args);
+    // This ignore chrome-extention path
+    // but nwjs contains local storage as chrome-extension
+};
 
 function getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISourceMapPathOverrides): ISourceMapPathOverrides {
     return sourceMapPathOverrides ? resolveWebRootPattern(webRoot, sourceMapPathOverrides, /*warnOnMissing=*/true) :

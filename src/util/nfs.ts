@@ -9,9 +9,9 @@ export function eventToPromise(stream:NodeJS.EventEmitter, evname:string):Promis
     });
 }
 
-export function readJson(file:string, def?:Object, forceCreate?:boolean):void
+export function readJson(file:string, def?:Object, forceCreate?:boolean):any
 {
-    var obj = null;
+    var obj:any = null;
     try
     {
         obj = JSON.parse(fs.readFileSync(file, 'utf-8'));

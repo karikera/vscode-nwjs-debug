@@ -11,7 +11,7 @@ const EXTENSION_NAME = 'vsc-nwjs';
 const targetFilter = target => target && (!target.type || target.type === 'page' || target.type === 'app');
 
 // Injected by webpack
-const VERSION = require('../../package.json').version;
+declare let VERSION: string;
 let versionWithDefault = typeof VERSION === 'undefined' ? 'unspecified' : VERSION; // Not built with webpack for tests
 
 // non-.txt file types can't be uploaded to github

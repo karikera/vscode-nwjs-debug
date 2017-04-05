@@ -5,12 +5,12 @@
  */
 import * as os from 'os';
 
-const arch = os.arch();
-let platform = os.platform();
-if (platform === 'darwin') {
+export const arch = os.arch();
+export var platform:string;
+
+var platformstr = os.platform();
+if (platformstr === 'darwin') {
   platform = 'osx';
-} else if (platform === 'win32') {
+} else if (platformstr === 'win32') {
   platform = 'win';
 }
-
-module.exports = {arch, platform};

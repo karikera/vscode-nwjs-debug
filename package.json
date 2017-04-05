@@ -21,12 +21,22 @@
   ],
   "license": "UNLICENSED",
   "scripts": {
+    "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\"",
+    "build:debugadapter": "webpack",
+    "build:test": "tsc -p test/tsconfig.json",
+    "watch": "concurrently \"npm run watch:debugadapter\" \"npm run watch:test\"",
+    "watch:debugadapter": "webpack -w",
+    "watch:test": "tsc -p test/tsconfig.json -w",
+    "test": "mocha --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
+    "intTest": "mocha --timeout 20000 -s 2000 -u tdd --colors --reporter out/test/int/loggingReporter.js './out/test/int/*.test.js'",
+    "lint": "tslint -t verbose \"src/**/*.ts\"",
+    "vscode:prepublish": "gulp verify-no-linked-modules",
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "dependencies": {
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core": "3.14.13",
-    "vscode-debugadapter": "^1.18.0-pre.5"
+    "vscode-debugadapter": "^1.18.0-pre.5",
     "archiver": "^1.3.0",
     "co": "^4.6.0",
     "extract-zip": "^1.6.0",
@@ -35,9 +45,10 @@
     "nugget": "^1.6.0",
     "pify": "^2.3.0",
     "shelljs": "^0.6.0",
-    "user-home": "^2.0.0",
+    "user-home": "^2.0.0"
   },
   "devDependencies": {
+    "@types/archiver": "^0.15.37",
     "@types/mocha": "^2.2.35",
     "@types/mockery": "^1.4.29",
     "@types/node": "^6.0.41",
@@ -63,7 +74,10 @@
   },
   "main": "./out/src/extension",
   "activationEvents": [
-    "onCommand:extension.chrome-debug.toggleSkippingFile"
+    "onCommand:vscode-nwjs.install",
+    "onCommand:vscode-nwjs.remove",
+    "onCommand:vscode-nwjs.publish",
+    "onCommand:vscode-nwjs.compile"
   ],
   "scripts": {
     "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\"",
@@ -73,18 +87,11 @@
     "watch:debugadapter": "webpack -w",
     "watch:test": "tsc -p test/tsconfig.json -w",
     "test": "mocha --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
-    "intTest": "mocha --timeout 20000 -s 2000 -u tdd --colors --reporter out/test/int/loggingReporter.js './out/test/int/*.test.js'",
+    "intTest": "mocha --timeout 20000 -s 3500 -u tdd --colors --reporter out/test/int/loggingReporter.js ./out/test/int/*.test.js",
     "lint": "tslint -t verbose \"src/**/*.ts\"",
     "vscode:prepublish": "gulp verify-no-linked-modules",
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
-  "main": "./js/command",
-  "activationEvents": [
-    "onCommand:vscode-nwjs.install",
-    "onCommand:vscode-nwjs.remove",
-    "onCommand:vscode-nwjs.publish",
-    "onCommand:vscode-nwjs.compile"
-  ],
   "contributes": {
     "breakpoints": [
       {
@@ -98,24 +105,6 @@
       },
       {
         "language": "fsharp"
-      }
-    ],
-    "commands": [
-      {
-        "command": "vscode-nwjs.install",
-        "title": "NWjs Install"
-      },
-      {
-        "command": "vscode-nwjs.remove",
-        "title": "NWjs Remove"
-      },
-      {
-        "command": "vscode-nwjs.publish",
-        "title": "NWjs Publish"
-      },
-      {
-        "command": "vscode-nwjs.compile",
-        "title": "NWjs Compile"
       }
     ],
     "jsonValidation": [
@@ -132,7 +121,7 @@
       {
         "type": "nwjs",
         "label": "NWjs",
-        "program": "./js/debugger/chromeDebug.js",
+        "program": "./out/bundle.js",
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "initialConfigurations": [
@@ -140,16 +129,16 @@
             "type": "nwjs",
             "request": "launch",
             "name": "Launch NWJS",
-            "webRoot": "${workspaceRoot}",
-            "nwjsVersion": "any"
+            "nwjsVersion": "any",
+            "webRoot": "${workspaceRoot}"
           },
           {
             "type": "nwjs",
             "request": "attach",
             "name": "Attach to Chrome",
             "port": 9222,
-            "webRoot": "${workspaceRoot}",
-            "nwjsVersion": "any"
+            "nwjsVersion": "any",
+            "webRoot": "${workspaceRoot}"
           }
         ],
         "configurationSnippets": [
@@ -160,8 +149,8 @@
               "type": "nwjs",
               "request": "launch",
               "name": "${2:Launch NWjs}",
-              "webRoot": "^\"\\${workspaceRoot}\"",
-              "nwjsVersion": "any"
+              "nwjsVersion": "any",
+              "webRoot": "^\"\\${workspaceRoot}\""
             }
           },
           {
@@ -171,9 +160,9 @@
               "type": "nwjs",
               "request": "launch",
               "name": "${2:Launch NWjs}",
+              "nwjsVersion": "any",
               "webRoot": "^\"\\${workspaceRoot}\"",
-              "userDataDir": "^\"\\${workspaceRoot}/.vscode/nwjs\"",
-              "nwjsVersion": "any"
+              "userDataDir": "^\"\\${workspaceRoot}/.vscode/nwjs\""
             }
           }
         ],
@@ -186,15 +175,15 @@
                 "description": "Port to use for NWJS remote debugging.",
                 "default": 9222
               },
-              "webRoot": {
-                "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
-                "default": "${workspaceRoot}"
-              },
               "nwjsVersion": {
                 "type": "string",
                 "description": "Using NWjs version",
                 "default": "any"
+              },
+              "webRoot": {
+                "type": "string",
+                "description": "This specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
+                "default": "${workspaceRoot}"
               },
               "pathMapping": {
                 "type": "object",
@@ -339,15 +328,15 @@
                 "description": "Will search for a tab with this EXACT url and attach to it, if found",
                 "default": "http://localhost:8080"
               },
-              "webRoot": {
-                "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
-                "default": "${workspaceRoot}"
-              },
               "nwjsVersion": {
                 "type": "string",
                 "description": "Using NWjs version",
                 "default": "any"
+              },
+              "webRoot": {
+                "type": "string",
+                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
+                "default": "${workspaceRoot}"
               },
               "pathMapping": {
                 "type": "object",
@@ -404,6 +393,22 @@
       ]
     },
     "commands": [
+      {
+        "command": "vscode-nwjs.install",
+        "title": "NWjs Install"
+      },
+      {
+        "command": "vscode-nwjs.remove",
+        "title": "NWjs Remove"
+      },
+      {
+        "command": "vscode-nwjs.publish",
+        "title": "NWjs Publish"
+      },
+      {
+        "command": "vscode-nwjs.compile",
+        "title": "NWjs Compile"
+      },
       {
         "command": "extension.chrome-debug.toggleSkippingFile",
         "title": "Toggle Skipping This File"

@@ -1,3 +1,7 @@
+# 1.0.3
+* Port to typescript
+* Update to vscode-chrome-debug-core@3.14.13
+
 # 1.0.2
 * Fix `no target pages found` problem
 

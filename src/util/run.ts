@@ -1,6 +1,6 @@
-const {spawn} = require('child_process');
+import {spawn} from 'child_process';
 
-export default function(cmd:string, args:string[], output:(msg:string)=>void):Promise<string>
+export function run(cmd:string, args:string[], output:(msg:string)=>void):Promise<string>
 {
     return new Promise<string>((resolve)=>{
         const p = spawn(cmd, args);
