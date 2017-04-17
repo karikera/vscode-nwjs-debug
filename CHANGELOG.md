@@ -1,3 +1,6 @@
+# 1.0.4
+* FIX COMMAND ERROR!
+
 # 1.0.3
 * Port to typescript
 * Update to vscode-chrome-debug-core@3.14.13

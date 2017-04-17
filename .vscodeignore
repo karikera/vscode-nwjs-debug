@@ -14,7 +14,7 @@ tslint.json
 vscode-chrome-debug.txt
 webpack.config.js
 
-out/src/**
+out/src/**/*.map
 out/test/**
 .gitignore
 jsconfig.json
