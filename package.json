@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "icon": "images/icon.png",
   "description": "NWjs Debugger",
   "author": {
@@ -175,11 +175,7 @@
                 "description": "Port to use for NWJS remote debugging.",
                 "default": 9222
               },
-              "nwjsVersion": {
-                "type": "string",
-                "description": "Using NWjs version",
-                "default": "any"
-              },
+              "nwjsVersion":{ "$ref": "nwjs.version.schema.json"},
               "webRoot": {
                 "type": "string",
                 "description": "This specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",

@@ -1,0 +1,6 @@
+{
+    "type": "string",
+    "description": "NWjs version",
+    "default": "any",
+    "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+(-(alpha[0-9]+|beta[0-9]+|rc[0-9]+))?|any)$"
+}

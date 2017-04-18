@@ -1,3 +1,6 @@
+# 1.0.5
+* Json schema fix
+
 # 1.0.4
 * FIX COMMAND ERROR!
 
