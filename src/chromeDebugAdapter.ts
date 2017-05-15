@@ -2,9 +2,12 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as os from 'os';
+import * as path from 'path';
+
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
-import {spawn, ChildProcess} from 'child_process';
-import Crdp from 'chrome-remote-debug-protocol';
+import {spawn, ChildProcess, fork, execSync} from 'child_process';
+import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
@@ -13,9 +16,11 @@ import * as nfs from './util/nfs';
 import * as nwjs from './nwjs/nwjs';
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
+    'webpack:///./~/*': '${webRoot}/node_modules/*',
     'webpack:///./*': '${webRoot}/*',
     'webpack:///*': '*',
-    'meteor://💻app/*': '${webRoot}/*',
+    'webpack:///src/*': '${webRoot}/*',
+    'meteor://💻app/*': '${webRoot}/*'
 };
 const DEFAULT_PACKAGE_JSON = {
     name: 'untitled',
@@ -27,6 +32,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
+    private _chromePID: number;
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -74,6 +80,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(...args.runtimeArgs);
             }
 
+            // Set a userDataDir by default, if not disabled with 'false' or already specified
+            if (typeof args.userDataDir === 'undefined' && !args.runtimeExecutable) {
+                args.userDataDir = path.join(os.tmpdir(), `vscode-chrome-debug-userdatadir_${port}`);
+            }
+
             if (args.userDataDir) {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
             }
@@ -89,14 +100,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 	        const launchUrl = 'chrome-extension://*/' + config.main;
 
             chromeArgs.push('.');
-
-            logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-            this._chromeProc = spawn(chromePath, chromeArgs, {
-                detached: true,
-                stdio: ['ignore'],
-                cwd: args.webRoot,
-            });
-            this._chromeProc.unref();
+            this._chromeProc = this.spawnChrome(chromePath, chromeArgs, !!args.runtimeExecutable, args.webRoot);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'NWJS error: ' + err;
                 logger.error(errMsg);
@@ -166,15 +170,31 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public disconnect(): void {
-        if (this._chromeProc && !this._hasTerminated) {
+        const hadTerminated = this._hasTerminated;
+
+        // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
+        super.disconnect();
+
+        if (this._chromeProc && !hadTerminated) {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
-            this._chromeProc.kill('SIGINT');
+            if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
+                // Run synchronously because this process may be killed before exec() would run
+                const taskkillCmd = `taskkill /F /T /PID ${this._chromePID}`;
+                logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
+                try {
+                    execSync(taskkillCmd);
+                } catch (e) {
+                    // Can fail if Chrome was already open, and the process with _chromePID is gone.
+                    // Or if it already shut down for some reason.
+                }
+            } else {
+                logger.log('Killing Chrome process');
+                this._chromeProc.kill('SIGINT');
+            }
         }
 
         this._chromeProc = null;
-
-        return super.disconnect();
     }
 
     /**
@@ -182,6 +202,42 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
      */
     public restart(): Promise<void> {
         return this.chrome.Page.reload({ ignoreCache: true });
+    }
+
+    private spawnChrome(chromePath: string, chromeArgs: string[], usingRuntimeExecutable: boolean, cwd:string): ChildProcess {
+        if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
+            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], { execArgv: [], silent: true, cwd });
+            chromeProc.unref();
+
+            chromeProc.on('message', data => {
+                const pidStr = data.toString();
+                logger.log('got chrome PID: ' + pidStr);
+                this._chromePID = parseInt(pidStr, 10);
+            });
+
+            chromeProc.on('error', (err) => {
+                const errMsg = 'chromeSpawnHelper error: ' + err;
+                logger.error(errMsg);
+            });
+
+            chromeProc.stderr.on('data', data => {
+                logger.error('[chromeSpawnHelper] ' + data.toString());
+            });
+
+            chromeProc.stdout.on('data', data => {
+                logger.log('[chromeSpawnHelper] ' + data.toString());
+            });
+
+            return chromeProc;
+        } else {
+            logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
+            const chromeProc = spawn(chromePath, chromeArgs, {
+                detached: true,
+                stdio: ['ignore'],
+            });
+            chromeProc.unref();
+            return chromeProc;
+        }
     }
 }
 
@@ -220,4 +276,13 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
     }
 
     return resolvedOverrides;
+}
+
+function getChromeSpawnHelperPath(): string {
+    if (path.basename(__dirname) === 'src') {
+        // For tests
+        return path.join(__dirname, '../chromeSpawnHelper.js');
+    } else {
+        return path.join(__dirname, 'chromeSpawnHelper.js');
+    }
 }

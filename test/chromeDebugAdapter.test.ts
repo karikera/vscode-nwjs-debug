@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {ChromeConnection, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import {chromeConnection, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
@@ -26,7 +26,7 @@ class MockChromeDebugSession {
 
 const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
-    let mockChromeConnection: Mock<ChromeConnection>;
+    let mockChromeConnection: Mock<chromeConnection.ChromeConnection>;
     let mockEventEmitter: EventEmitter;
     let mockChrome: IMockChromeConnectionAPI;
 
@@ -37,7 +37,7 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockChromeConnection = Mock.ofType(ChromeConnection, MockBehavior.Strict);
+        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict);
         mockChrome = getMockChromeConnectionApi();
         mockEventEmitter = mockChrome.mockEventEmitter;
         mockChromeConnection
@@ -68,19 +68,25 @@ suite('ChromeDebugAdapter', () => {
     });
 
     suite('launch()', () => {
+        let originalFork: any;
         let originalSpawn: any;
         let originalStatSync: any;
 
         teardown(() => {
             // Hacky mock cleanup
-            require('child_process').spawn = originalSpawn;
+            require('child_process').fork = originalFork;
             require('fs').statSync = originalStatSync;
         })
 
         test('launches with minimal correct args', () => {
             let spawnCalled = false;
-            function spawn(chromePath: string, args: string[]): any {
+            function fork(chromeSpawnHelperPath: string, [chromePath, ...args]: string[]): any {
                 // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
+                assert(chromeSpawnHelperPath.indexOf('chromeSpawnHelper.js') >= 0);
+                return spawn(chromePath, args);
+            }
+
+            function spawn(chromePath: string, args: string[]): any {
                 assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
                 assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
@@ -88,12 +94,15 @@ suite('ChromeDebugAdapter', () => {
                 assert(args.indexOf('def') >= 0);
                 spawnCalled = true;
 
-                return { on: () => { }, unref: () => { } };
+                const stdio = { on: () => { } };
+                return { on: () => { }, unref: () => { }, stdout: stdio, stderr: stdio };
             }
 
-            // Mock spawn for chrome process, and 'fs' for finding chrome.exe.
+            // Mock fork/spawn for chrome process, and 'fs' for finding chrome.exe.
             // These are mocked as empty above - note that it's too late for mockery here.
+            originalFork = require('child_process').fork;
             originalSpawn = require('child_process').spawn;
+            require('child_process').fork = fork;
             require('child_process').spawn = spawn;
             originalStatSync = require('fs').statSync;
             require('fs').statSync = () => true;

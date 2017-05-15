@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from 'path';
-import {utils as coreUtils} from 'vscode-chrome-debug-core';
+import {utils as coreUtils, chromeConnection} from 'vscode-chrome-debug-core';
 
 export class DebounceHelper {
     private waitToken: NodeJS.Timer;
@@ -35,3 +35,6 @@ export class DebounceHelper {
         fn();
     }
 }
+
+export const targetFilter: chromeConnection.ITargetFilter =
+    target => target && (!target.type || target.type === 'page' || target.type === 'app');

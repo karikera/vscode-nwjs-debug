@@ -4,18 +4,18 @@
 
 import {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer} from 'vscode-chrome-debug-core';
 import * as path from 'path';
+import {targetFilter} from './utils';
 
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 
-const EXTENSION_NAME = 'vsc-nwjs';
-const targetFilter = target => target && (!target.type || target.type === 'page' || target.type === 'app');
+const EXTENSION_NAME = 'debugger-for-chrome';
 
 // Injected by webpack
 declare let VERSION: string;
 let versionWithDefault = typeof VERSION === 'undefined' ? 'unspecified' : VERSION; // Not built with webpack for tests
 
 // non-.txt file types can't be uploaded to github
-// also note that __dirname here is ...out/
+// also note that __dirname here is out/
 const logFilePath = path.resolve(__dirname, '../vscode-chrome-debug.txt');
 
 // const utils = require('./utils');
