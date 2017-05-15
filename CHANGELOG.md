@@ -1,6 +1,7 @@
 # 1.0.6
 * Linux platfom error fix
-* Error report fix
+* Error message  fix
+* Update to vscode-chrome-debug-core@3.15.3
 
 # 1.0.5
 * Json schema fix

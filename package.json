@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "icon": "images/icon.png",
   "description": "NWjs Debugger",
   "author": {
@@ -73,8 +73,8 @@
   },
   "main": "./out/src/extension",
   "activationEvents": [
-    "onCommand:extension.chrome-debug.startSession",
-    "onCommand:extension.chrome-debug.toggleSkippingFile",
+    "onCommand:vscode-nwjs.startSession",
+    "onCommand:vscode-nwjs.toggleSkippingFile",
     "onCommand:vscode-nwjs.install",
     "onCommand:vscode-nwjs.remove",
     "onCommand:vscode-nwjs.publish",
@@ -128,7 +128,7 @@
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "languages": [ "javascript", "typescript", "javascriptreact", "typescriptreact" ],
-        "startSessionCommand": "extension.chrome-debug.startSession",
+        "startSessionCommand": "vscode-nwjs.startSession",
         "initialConfigurations": [
           {
             "type": "nwjs",
@@ -169,7 +169,10 @@
                 "default": 9222
               },
               "nwjsVersion": {
-                "$ref": "nwjs.version.schema.json"
+                "type": "string",
+                "description": "NWjs version",
+                "default": "any",
+                "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+(-(alpha[0-9]+|beta[0-9]+|rc[0-9]+))?|any)$"
               },
               "webRoot": {
                 "type": "string",
@@ -377,9 +380,9 @@
     "menus": {
       "debug/callstack/context": [
         {
-          "command": "extension.chrome-debug.toggleSkippingFile",
+          "command": "vscode-nwjs.toggleSkippingFile",
           "group": "navigation",
-          "when": "inDebugMode && debugType == 'chrome'"
+          "when": "inDebugMode && debugType == 'nwjs'"
         }
       ]
     },
@@ -401,8 +404,8 @@
         "title": "NWjs Compile"
       },
       {
-        "command": "extension.chrome-debug.toggleSkippingFile",
-        "title": "Toggle Skipping This File"
+        "command": "vscode-nwjs.toggleSkippingFile",
+        "title": "NWjs Toggle Skipping This File"
       }
     ],
     "keybindings": [
@@ -410,7 +413,7 @@
         "command": "extension.node-debug.pickLoadedScript",
         "key": "ctrl+f4",
         "mac": "cmd+f4",
-        "when": "debugType == 'chrome'"
+        "when": "debugType == 'nwjs'"
       }
     ]
   }

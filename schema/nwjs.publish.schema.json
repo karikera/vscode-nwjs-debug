@@ -1,7 +1,12 @@
 {
     "type": "object",
     "properties":{
-        "nwjsVersion":{ "$ref": "nwjs.version.schema.json"},
+        "nwjsVersion":{
+            "type": "string",
+            "description": "NWjs version",
+            "default": "any",
+            "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+(-(alpha[0-9]+|beta[0-9]+|rc[0-9]+))?|any)$"
+        },
         "package":{
             "$ref": "package.schema.json",
             "description": "For override package.json"

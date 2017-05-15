@@ -3,10 +3,11 @@
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-const {window} = vscode;
 import * as Core from 'vscode-chrome-debug-core';
 
 import {targetFilter} from './utils';
+
+const {window} = vscode;
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver = require('archiver');
@@ -311,9 +312,10 @@ function oncatch(err:Error):Thenable<void>
 }
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('[extension: vscode-nwjs] activate');
-    //context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
+    context.subscriptions.push(vscode.commands.registerCommand('vscode-nwjs.toggleSkippingFile', toggleSkippingFile));
+    context.subscriptions.push(vscode.commands.registerCommand('vscode-nwjs.startSession', startSession));
     
+    console.log('[extension: vscode-nwjs] activate');
     function regist(command:string, oncommand:()=>Promise<void>):void
     {
         const disposable = vscode.commands.registerCommand(command, ()=>{
@@ -367,7 +369,6 @@ export function activate(context: vscode.ExtensionContext) {
     regist('vscode-nwjs.remove', removeNWjs);
     regist('vscode-nwjs.publish', publishNWjs);
     regist('vscode-nwjs.compile', compileNWjs);
-    context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.startSession', startSession));
 }
 
 export function deactivate() {
