@@ -1,3 +1,7 @@
+# 1.0.7
+* Error message fix
+* Fix runtimeExecutable launch option
+
 # 1.0.6
 * Linux platfom error fix
 * Error message  fix

@@ -234,6 +234,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             const chromeProc = spawn(chromePath, chromeArgs, {
                 detached: true,
                 stdio: ['ignore'],
+                cwd
             });
             chromeProc.unref();
             return chromeProc;

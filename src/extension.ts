@@ -269,7 +269,19 @@ async function generatePackageJson():Promise<void>
 
 function oncatch(err:Error):Thenable<void>
 {
-    if (!err || !err.message)
+    if (!err)
+    {
+        console.error(err);
+        vs.errorBox(err+'');
+        return;
+    }
+    const errobj = <any>err;
+    if (errobj._value)
+    {
+        err = errobj._value;
+    }
+
+    if (!err.message)
     {
         console.error(err);
         try
