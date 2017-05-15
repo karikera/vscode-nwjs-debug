@@ -1,3 +1,7 @@
+# 1.0.6
+* Linux platfom error fix
+* Error report fix
+
 # 1.0.5
 * Json schema fix
 

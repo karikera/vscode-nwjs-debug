@@ -9,8 +9,9 @@ export const arch = os.arch();
 export var platform:string;
 
 var platformstr = os.platform();
-if (platformstr === 'darwin') {
-  platform = 'osx';
-} else if (platformstr === 'win32') {
-  platform = 'win';
+switch (platformstr)
+{
+case 'darwin': platform = 'osx'; break;
+case 'win32': platform = 'win'; break;
+default: platform = platformstr; break;
 }

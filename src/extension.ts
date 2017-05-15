@@ -267,6 +267,20 @@ async function generatePackageJson():Promise<void>
 
 function oncatch(err:Error):Thenable<void>
 {
+    if (!err || !err.message)
+    {
+        console.error(err);
+        try
+        {
+            vs.errorBox(JSON.stringify(err));
+        }
+        catch(e)
+        {
+            vs.errorBox(err+'');
+        }
+        return;
+    }
+    const errarray = err.message.split('#', 2);
     const [msg, param] = err.message.split('#', 2);
     switch(msg)
     {

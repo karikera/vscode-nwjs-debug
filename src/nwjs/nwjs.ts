@@ -3,15 +3,14 @@
 /**
  * Module dependencies
  */
-import * as home from 'user-home';
+const home:string = require('user-home');
 import {rm, exec} from 'shelljs';
-import * as co from 'co';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as getVersions from 'nwjs-versions';
-import * as nugget from 'nugget';
-import * as extract from 'extract-zip';
-import * as pify from 'pify';
+const getVersions:()=>Promise<string[]> = require('nwjs-versions');
+const nugget = require('nugget');
+const extract = require('extract-zip');
+const pify = require('pify');
 import * as os from './os';
 
 function splitVersionInfo(vstr:string):{version:number[], ext:string}
