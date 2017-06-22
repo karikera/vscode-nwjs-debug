@@ -1,6 +1,7 @@
 # 1.0.8
 * Remove some npm specific properties from schema.
 * Remove NWjs directory with fs-extra
+* Update to vscode-chrome-debug-core@3.15.7
 
 # 1.0.7
 * Error message fix
