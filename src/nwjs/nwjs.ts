@@ -4,7 +4,8 @@
  * Module dependencies
  */
 const home:string = require('user-home');
-import {rm, exec} from 'shelljs';
+import {exec} from 'shelljs';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as fs from 'fs';
 const getVersions:()=>Promise<string[]> = require('nwjs-versions');
@@ -146,10 +147,10 @@ export function getName(version:string):{realVersion:string, fileName:string, ex
     return {realVersion, fileName, ext, url};
 }
 
-export function remove (version:string):boolean
+export async function remove (version:string):Promise<boolean>
 {
     if (!exists(version)) return false;
-    rm('-r', `${home}/.nwjs/${getName(version).fileName}`);
+    await fse.remove(`${home}/.nwjs/${getName(version).fileName}`);
     return true;
 }
 

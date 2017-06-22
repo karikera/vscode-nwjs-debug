@@ -77,8 +77,8 @@ async function removeNWjs():Promise<void>
         {placeHolder: "Select remove version"});
     if (!version) return;
     var res = false;
-    res = nwjs.remove(version) || res;
-    res = nwjs.remove(version+'-sdk') || res;
+    res = (await nwjs.remove(version)) || res;
+    res = (await nwjs.remove(version+'-sdk')) || res;
     if (res) vs.infoBox("Remove complete");
     else vs.infoBox("NWjs already removed");
 }

@@ -1,3 +1,7 @@
+# 1.0.8
+* Remove some npm specific properties from schema.
+* Remove NWjs directory with fs-extra
+
 # 1.0.7
 * Error message fix
 * Fix runtimeExecutable launch option
