@@ -20,7 +20,7 @@ suite('Utils', () => {
         testUtils.setupUnhandledRejectionListener();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
-        mockery.registerMock('fs', { statSync: () => { } });
+        mockery.registerMock('fs', { statSync: () => { }, existsSync: () => false });
     });
 
     teardown(() => {
