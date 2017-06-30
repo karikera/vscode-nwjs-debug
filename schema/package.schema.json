@@ -65,6 +65,5 @@
             "type": "boolean",
             "description": "whether the default Edit menu should be disabled on Mac OS X. The default value is false. Only effective on Mac OS X. This is a workaround for a feature request and is expected to be replaced by something else soon"
         }
-        }
     }
 }
