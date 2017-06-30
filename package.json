@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "icon": "images/icon.png",
   "description": "NWjs Debugger",
   "author": {
@@ -54,7 +54,7 @@
     "@types/fs-extra": "^3.0.3",
     "@types/mocha": "^2.2.41",
     "@types/mockery": "^1.4.29",
-    "@types/node": "^6.0.78",
+    "@types/node": "^6.0.79",
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
     "concurrently": "^3.5.0",
@@ -67,11 +67,11 @@
     "ts-loader": "^1.0.0",
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
-    "typescript": "^2.4.0",
-    "vscode": "^1.0.3",
+    "typescript": "^2.4.1",
+    "vscode": "^1.1.1",
     "vscode-chrome-debug-core-testsupport": "^3.14.5",
-    "vscode-debugadapter-testsupport": "^1.20.0",
-    "vscode-debugprotocol": "^1.20.0",
+    "vscode-debugadapter-testsupport": "^1.21.0",
+    "vscode-debugprotocol": "^1.21.0",
     "webpack": "^2.6.1",
     "webpack-fail-plugin": "^1.0.5"
   },

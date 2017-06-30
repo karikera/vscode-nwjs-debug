@@ -1,3 +1,6 @@
+# 1.0.9
+* Fix schema json syntax error
+
 # 1.0.8
 * Remove some npm specific properties from schema.
 * Remove NWjs directory with fs-extra
