@@ -4,6 +4,7 @@
 
 import {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer} from 'vscode-chrome-debug-core';
 import * as path from 'path';
+import * as os from 'os';
 import {targetFilter} from './utils';
 
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
@@ -16,7 +17,7 @@ let versionWithDefault = typeof VERSION === 'undefined' ? 'unspecified' : VERSIO
 
 // non-.txt file types can't be uploaded to github
 // also note that __dirname here is out/
-const logFilePath = path.resolve(__dirname, '../vscode-chrome-debug.txt');
+const logFilePath = path.resolve(os.tmpdir(), 'vscode-chrome-debug.txt');
 
 // const utils = require('./utils');
 // utils.createFunctionListener(ChromeDebugSession.prototype, 'chromeDebugSession');
