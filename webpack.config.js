@@ -19,7 +19,7 @@ module.exports = {
         extensions: ['.ts']
     },
     output: {
-        filename: 'out/bundle.js'
+        filename: './out/bundle.js'
     },
     module: {
         rules: [

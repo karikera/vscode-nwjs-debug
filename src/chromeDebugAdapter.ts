@@ -50,7 +50,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 const version = args.nwjsVersion;
                 if (version && version !== 'any')
                 {
-                    chromePath = nwjs.getPath(version + '-sdk');
+                    chromePath = nwjs.VersionInfo.fromVersionText(version + '-sdk').getPath();
                     if (!chromePath) 
                     {
                         return coreUtils.errP(`Need to install NWjs ${version}! - Please use "NWjs Install" command.`);
@@ -58,7 +58,12 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 }
                 else
                 {
-                    chromePath = nwjs.getPath(nwjs.getLatestVersionSync(v=>v.endsWith('-sdk')));
+                    const latest = nwjs.getLatestVersionSync(v=>v.sdk);
+                    if (!latest)
+                    {
+                        return coreUtils.errP(`Need to install NWjs! - Please use "NWjs Install" command.`);
+                    }
+                    chromePath = latest.getPath();
                     if (!chromePath) 
                     {
                         return coreUtils.errP(`Need to install NWjs! - Please use "NWjs Install" command.`);

@@ -5,13 +5,24 @@
  */
 import * as os from 'os';
 
-export const arch = os.arch();
-export var platform:string;
-
-var platformstr = os.platform();
-switch (platformstr)
+function getArch():string
 {
-case 'darwin': platform = 'osx'; break;
-case 'win32': platform = 'win'; break;
-default: platform = platformstr; break;
+    const platformstr = os.platform();
+    switch (platformstr)
+    {
+    case 'darwin': return 'osx';
+    case 'win32': return 'win';
+    default: return platformstr;
+    }    
 }
+
+export const arch = os.arch();
+export const platform:string = getArch();
+export const supportArch:Set<string> = new Set;
+
+if (arch === 'x64' && (platform === 'win' || platform === 'linux'))
+{
+    supportArch.add('ia32');
+}
+supportArch.add(arch);
+

@@ -9,7 +9,7 @@
         "noImplicitThis": true
     },
     "include": [
-        "src/**/*.ts",
-        "node_modules/@types/**/*.ts"
+        "./src/**/*.ts",
+        "./node_modules/@types/**/*.ts"
     ]
 }
