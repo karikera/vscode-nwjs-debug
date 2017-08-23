@@ -77,3 +77,8 @@ export function copy(from:string, to:string):Promise<void>
     fs.createReadStream(from).pipe(fos);
     return eventToPromise(fos, 'close');
 }
+
+export function exists(path:string):Promise<boolean>
+{
+    return new Promise<boolean>(resolve=>fs.exists(path, resolve));
+}

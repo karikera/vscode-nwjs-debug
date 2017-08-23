@@ -12,14 +12,14 @@ fs.readdirSync('node_modules')
 
 module.exports = {
     entry: {
-        src: './src/chromeDebug.ts'
+        src: './src/chromeDebug'
     },
     devtool: 'source-map',
     resolve: {
         extensions: ['.ts']
     },
     output: {
-        filename: './out/bundle.js'
+        filename: 'out/bundle.js'
     },
     module: {
         rules: [

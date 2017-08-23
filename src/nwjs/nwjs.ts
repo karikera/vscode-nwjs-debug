@@ -8,6 +8,7 @@ import {exec} from 'shelljs';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as nfs from '../util/nfs';
 const getVersions:()=>Promise<string[]> = require('nwjs-versions');
 const nugget = require('nugget');
 const extract = require('extract-zip');
@@ -39,16 +40,23 @@ export class VersionInfo
     public description:string = '';
     public detail:string = '';
 
-    public getRootPath():string|null
+    public getRootPathSync():string|null
     {
         const nw = path.join(home, '.nwjs', this.getFileName());
         if (!fs.existsSync(nw)) return null;
         return nw;
     }
 
-    public getNwjc():string|null
+    public async getRootPath():Promise<string|null>
     {
-        const root = this.getRootPath();
+        const nw = path.join(home, '.nwjs', this.getFileName());
+        if (!await nfs.exists(nw)) return null;
+        return nw;
+    }
+
+    public getNwjcSync():string|null
+    {
+        const root = this.getRootPathSync();
         if (root === null) return null;
     
         let nw;
@@ -61,9 +69,39 @@ export class VersionInfo
         return path.join(root, nw);
     }
     
-    public getPath():string|null
+    public async getNwjc():Promise<string|null>
     {
-        const root = this.getRootPath();
+        const root = await this.getRootPath();
+        if (root === null) return null;
+    
+        let nw;
+        switch(os.platform)
+        {
+        case 'osx': nw = 'nwjc'; break;
+        case 'win': nw = 'nwjc.exe'; break;
+        default: nw = 'nwjc'; break;
+        }
+        return path.join(root, nw);
+    }
+    
+    public getPathSync():string|null
+    {
+        const root = this.getRootPathSync();
+        if (root === null) return null;
+
+        let nw;
+        switch(os.platform)
+        {
+        case 'osx': nw = 'nwjs.app/Contents/MacOS/nwjs'; break;
+        case 'win': nw = 'nw.exe'; break;
+        default: nw = 'nw'; break;
+        }
+        return path.join(root, nw);
+    }
+    
+    public async getPath():Promise<string|null>
+    {
+        const root = await this.getRootPath();
         if (root === null) return null;
 
         let nw;
@@ -76,14 +114,19 @@ export class VersionInfo
         return path.join(root, nw);
     }
 
+    public existsSync():boolean
+    {
+        return this.getRootPathSync() !== null;
+    }
+    
+    public async exists():Promise<boolean>
+    {
+        return (await this.getRootPathSync()) !== null;
+    }
+
     public getUrl():string
     {
         return `http://dl.nwjs.io/v${this.version}/${this.getFileName()}.${this.ext}`;
-    }
-
-    public exists():boolean
-    {
-        return this.getRootPath() !== null;
     }
 
     public getSdkVersion():VersionInfo
@@ -106,7 +149,7 @@ export class VersionInfo
     public async install():Promise<boolean>
     {
         console.log("Download NWjs("+this.versionText+")...");
-        if (this.exists()) return false;
+        if (await this.exists()) return false;
 
         // Create cache dir
         const cacheDir = path.join(home, '.nwjs');
@@ -136,7 +179,7 @@ export class VersionInfo
 
     public async remove():Promise<boolean>
     {
-        if (!this.exists()) return false;
+        if (!await this.exists()) return false;
         await fse.remove(`${home}/.nwjs/${this.getFileName()}`);
         return true;
     }
@@ -303,7 +346,7 @@ export function getLatestVersionSync(filter:(ver:VersionInfo)=>boolean):VersionI
     return vers[0];
 }
 
-export async function listAll(filter:(ver:VersionInfo)=>boolean|void):Promise<VersionInfo[]>
+export async function listAll(filter?:(ver:VersionInfo)=>boolean|void):Promise<VersionInfo[]>
 {
     const supportArchs = [... os.supportArch];
  

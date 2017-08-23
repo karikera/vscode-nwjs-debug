@@ -55,13 +55,26 @@ async function installNWjs(version?:string):Promise<void>
     if (!version)
     {
         info = await window.showQuickPick(
-            nwjs.list().then(exists=>{
-                const map = new Set<string>();
-                for(const v of exists) map.add(v.versionText);
-                return nwjs.listAll(v=>!map.has(v.versionText));
-            }),
+            nwjs.listAll().then(async(list)=>{
+                const have = await nwjs.list();
+                const haveset = new Set<string>();
+                for(const info of have)
+                {
+                    haveset.add(info.versionText);
+                }
+                
+                for (const info of list)
+                {
+                    if (haveset.has(info.versionText))
+                    {
+                        info.description += ' (Installed)';
+                    }
+                }
+                return list;
+            }), 
             {placeHolder: "Select install version"});
-        if (!version) return;
+        if (!info) return;
+        if (await info.exists()) return;
     }
     else
     {
@@ -110,7 +123,7 @@ async function compileNWjs(version?:string, filename?:string, outputFile?:string
     if (!filename) filename = selectedFile;
     if (!outputFile) outputFile = replaceExt(filename, '.bin');
 
-    const path = info.getSdkVersion().getNwjc();
+    const path = await info.getSdkVersion().getNwjc();
     if (path === null) throw new Error(NEED_INSTALL+'#'+version);
     await run(path, [filename, outputFile], str=>vs.log(str));
 }
@@ -151,7 +164,7 @@ async function makeNWjs(outdir:string, version:string, nwfile:string, packageJso
 
     const info = nwjs.VersionInfo.fromVersionText(version);
 
-    const srcdir = info.getRootPath();
+    const srcdir = await info.getRootPath();
     if (srcdir === null) throw Error('Installed NWjs not found');
     for(const src of glob.sync([srcdir+'/**']))
     {
@@ -176,7 +189,7 @@ async function makeNWjs(outdir:string, version:string, nwfile:string, packageJso
     }
     else
     {
-        const nwjsPath = info.getPath();
+        const nwjsPath = await info.getPath();
         if (nwjsPath === null) throw Error('Installed NWjs not found');
         const exepath = path.join(outdir, packageJson.name+'.exe');
         const fos = fs.createWriteStream(exepath);
@@ -204,7 +217,7 @@ async function publishNWjs():Promise<void>
         info = nwjs.VersionInfo.fromVersionText(nwjsVersion);
     }
 
-    const nwjsPath = info.getPath();
+    const nwjsPath = await info.getPath();
     if (nwjsPath === null) throw new Error(NEED_INSTALL+'#'+nwjsVersion);
     const curdir = process.cwd();
     process.chdir(path.dirname(window.activeTextEditor.document.fileName));

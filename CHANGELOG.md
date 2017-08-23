@@ -1,3 +1,7 @@
+# 1.0.10
+* Multi architecture support
+* Update to vscode-chrome-debug-core@3.16.5
+
 # 1.0.9
 * Fix schema json syntax error
 * Update to vscode-chrome-debug-core@3.15.9

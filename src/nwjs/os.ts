@@ -7,6 +7,19 @@ import * as os from 'os';
 
 function getArch():string
 {
+    const arch = os.arch();
+    if (arch === 'ai32' && platform === 'win')
+    {
+        if (process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432'))
+        {
+            return 'x64';
+        }
+    }
+    return arch;
+}
+
+function getPlatform():string
+{
     const platformstr = os.platform();
     switch (platformstr)
     {
@@ -16,8 +29,8 @@ function getArch():string
     }    
 }
 
-export const arch = os.arch();
-export const platform:string = getArch();
+export const platform:string = getPlatform();
+export const arch:string = getArch();
 export const supportArch:Set<string> = new Set;
 
 if (arch === 'x64' && (platform === 'win' || platform === 'linux'))
