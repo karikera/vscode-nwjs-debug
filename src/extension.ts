@@ -211,6 +211,7 @@ async function publishNWjs():Promise<void>
     {
         info = await nwjs.getLatestVersion();
         if (!info) throw new Error(NEED_INSTALL);
+        nwjsVersion = info.version;
     }
     else
     {
