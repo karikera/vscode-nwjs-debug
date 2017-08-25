@@ -73,7 +73,6 @@ async function installNWjs(version?:nwjs.VersionInfo):Promise<void>
             }), 
             {placeHolder: "Select install version"});
         if (!version) return;
-        if (await version.exists()) return;
     }
     var downloaded = false;
     downloaded = (await version.install()) || downloaded;
@@ -115,33 +114,6 @@ async function compileNWjs(version?:nwjs.VersionInfo, filename?:string, outputFi
     const path = await version.getSdkVersion().getNwjc();
     if (path === null) throw new Error(NEED_INSTALL+'#'+version.versionText);
     await run(path, [filename, outputFile], str=>vs.log(str));
-}
-
-function replaceScriptTag(html:string, compileTargets:Object):string
-{
-    const regexp = /<script([ \t]+[^>]+)?>/g;
-    const prop = /[ \t]+src=(["'])([^"']+)\1/;
-    var out = '';
-    var previous = 0;
-    for(;;)
-    {
-        const res = regexp.exec(html);
-        if (!res) break;
-        const propres = prop.exec(res[1]);
-        const end = html.indexOf("</script>", regexp.lastIndex);
-        if (propres && propres[2])
-        {
-            const src = propres[2];
-            out += html.substring(previous, res.index);
-            const output = replaceExt(src,'bin');
-            out += `<script>require('nw.gui').Window.get().evalNWBin(null, '${output}');</script>`;
-            previous = end+9;
-            compileTargets[src] = output;
-        }
-        regexp.lastIndex = end + 9;
-    }
-    out += html.substr(previous);
-    return out;
 }
 
 async function makeNWjs(outdir:string, version:nwjs.VersionInfo, nwfile:string, packageJson:{name:string}, exclude:string[]):Promise<void>
@@ -186,22 +158,10 @@ async function makeNWjs(outdir:string, version:nwjs.VersionInfo, nwfile:string, 
     }
 }
 
-function resolveToString(value:any):string
-{
-    if (value) return value + '';
-    return '';
-}
-
-function resolveToStringArray(value:any):string[]
-{
-    if (!(value instanceof Array)) return [];
-    return value.map(resolveToString);
-}
-
 async function publishNWjs():Promise<void>
 {
     if (!window.activeTextEditor) return;
-
+    
     const config = nfs.readJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
     if (!config) throw new Error(NEED_PUBLISH_JSON);
     const exclude = resolveToStringArray(config.exclude);
@@ -261,7 +221,8 @@ async function publishNWjs():Promise<void>
     for(const src of glob.sync(html))
     {
         vs.log(src);
-        appendText(src, replaceScriptTag(fs.readFileSync(src,'utf-8'), targets));
+        const script = await nfs.readFile(src);
+        appendText(src, replaceScriptTag(script, targets));
     }
     vs.log('Compile js...');
     for(const src in targets)
@@ -307,7 +268,7 @@ function oncatch(err:Error):Thenable<void>
 {
     if (!err)
     {
-        console.error(err);
+        vs.log(err.stack);
         vs.errorBox(err+'');
         return;
     }
@@ -319,7 +280,7 @@ function oncatch(err:Error):Thenable<void>
 
     if (!err.message)
     {
-        console.error(err);
+        vs.log(err.stack);
         try
         {
             vs.errorBox(JSON.stringify(err));
@@ -353,8 +314,8 @@ function oncatch(err:Error):Thenable<void>
             return generatePackageJson().catch(oncatch);
         });
     default:
-        console.error(err.stack);
-        vs.errorBox(err.message);
+        vs.log(err.stack);
+        vs.errorBox(err.stack);
         break;
     }
 }
@@ -379,8 +340,8 @@ export function activate(context: vscode.ExtensionContext) {
                 vs.show();
                 const stdout = process.stdout.write;
                 const stderr = process.stderr.write;
-                process.stdout.write = new vs.ChannelStream().bindWrite();
-                process.stderr.write = new vs.ChannelStream().bindWrite();
+                const channelStream = new vs.ChannelStream();
+                process.stderr.write = process.stdout.write = channelStream.bindWrite();
                 var olddir = '';
                 if (window.activeTextEditor)
                 {
@@ -399,6 +360,7 @@ export function activate(context: vscode.ExtensionContext) {
                 .catch(oncatch)
                 .then(()=>{
                     if(olddir) process.chdir(olddir);
+                    channelStream.end();
                     process.stdout.write = stdout;
                     process.stderr.write = stderr;
                     onProgress = false;
@@ -406,8 +368,8 @@ export function activate(context: vscode.ExtensionContext) {
             }
             catch(err)
             {
-                console.error(err.stack);
-                vs.errorBox(err.message);
+                vs.log(err.stack);
+                vs.errorBox(err.error);
             }
         });
         context.subscriptions.push(disposable);
@@ -485,4 +447,43 @@ function unescapeTargetTitle(title: string): string {
         .replace(/&gt;/g, '>')
         .replace(/&#39;/g, `'`)
         .replace(/&quot;/g, '"');
+}
+
+function replaceScriptTag(html:string, compileTargets:Object):string
+{
+    const regexp = /<script([ \t]+[^>]+)?>/g;
+    const prop = /[ \t]+src=(["'])([^"']+)\1/;
+    var out = '';
+    var previous = 0;
+    for(;;)
+    {
+        const res = regexp.exec(html);
+        if (!res) break;
+        const propres = prop.exec(res[1]);
+        const end = html.indexOf("</script>", regexp.lastIndex);
+        if (propres && propres[2])
+        {
+            const src = propres[2];
+            out += html.substring(previous, res.index);
+            const output = replaceExt(src,'bin');
+            out += `<script>require('nw.gui').Window.get().evalNWBin(null, '${output}');</script>`;
+            previous = end+9;
+            compileTargets[src] = output;
+        }
+        regexp.lastIndex = end + 9;
+    }
+    out += html.substr(previous);
+    return out;
+}
+
+function resolveToString(value:any):string
+{
+    if (value) return value + '';
+    return '';
+}
+
+function resolveToStringArray(value:any):string[]
+{
+    if (!(value instanceof Array)) return [];
+    return value.map(resolveToString);
 }

@@ -78,6 +78,16 @@ export function copy(from:string, to:string):Promise<void>
     return eventToPromise(fos, 'close');
 }
 
+export function readFile(path:string):Promise<string>
+{
+    return new Promise((resolve, reject)=>{
+        fs.readFile(path, 'utf-8', (err, data)=>{
+            if (err) reject(err);
+            else resolve(data);
+        });
+    });
+}
+
 export function exists(path:string):Promise<boolean>
 {
     return new Promise<boolean>(resolve=>fs.exists(path, resolve));
