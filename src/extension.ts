@@ -49,12 +49,11 @@ function replaceExt(filename:string, ext:string):string
         return filename + '.'+ext;
 }
 
-async function installNWjs(version?:string):Promise<void>
+async function installNWjs(version?:nwjs.VersionInfo):Promise<void>
 {
-    var info:nwjs.VersionInfo;
     if (!version)
     {
-        info = await window.showQuickPick(
+        version = await window.showQuickPick(
             nwjs.listAll().then(async(list)=>{
                 const have = await nwjs.list();
                 const haveset = new Set<string>();
@@ -73,16 +72,12 @@ async function installNWjs(version?:string):Promise<void>
                 return list;
             }), 
             {placeHolder: "Select install version"});
-        if (!info) return;
-        if (await info.exists()) return;
-    }
-    else
-    {
-        info = nwjs.VersionInfo.fromVersionText(version);
+        if (!version) return;
+        if (await version.exists()) return;
     }
     var downloaded = false;
-    downloaded = (await info.install()) || downloaded;
-    downloaded = (await info.getSdkVersion().install()) || downloaded;
+    downloaded = (await version.install()) || downloaded;
+    downloaded = (await version.getSdkVersion().install()) || downloaded;
     vs.clear();
     if(downloaded) vs.infoBox("Install complete");
     else vs.infoBox("NWjs already installed");
@@ -101,30 +96,24 @@ async function removeNWjs():Promise<void>
     else vs.infoBox("NWjs already removed");
 }
 
-async function compileNWjs(version?:string, filename?:string, outputFile?:string):Promise<void>
+async function compileNWjs(version?:nwjs.VersionInfo, filename?:string, outputFile?:string):Promise<void>
 {
-    var info:nwjs.VersionInfo;
-
     if (!version)
     {
         var versions = await nwjs.list();
         versions = versions.filter(v=>!v.sdk);
         if (versions.length !== 1)
-            info = await window.showQuickPick(versions, {placeHolder: "Select compiler version"});
+            version = await window.showQuickPick(versions, {placeHolder: "Select compiler version"});
         else
-            info = versions[0];
-        if (!info) return;
-    }
-    else
-    {
-        info = nwjs.VersionInfo.fromVersionText(version);
+            version = versions[0];
+        if (!version) return;
     }
 
     if (!filename) filename = selectedFile;
     if (!outputFile) outputFile = replaceExt(filename, '.bin');
 
-    const path = await info.getSdkVersion().getNwjc();
-    if (path === null) throw new Error(NEED_INSTALL+'#'+version);
+    const path = await version.getSdkVersion().getNwjc();
+    if (path === null) throw new Error(NEED_INSTALL+'#'+version.versionText);
     await run(path, [filename, outputFile], str=>vs.log(str));
 }
 
@@ -155,16 +144,14 @@ function replaceScriptTag(html:string, compileTargets:Object):string
     return out;
 }
 
-async function makeNWjs(outdir:string, version:string, nwfile:string, packageJson:{name:string}, exclude:Array<string>):Promise<void>
+async function makeNWjs(outdir:string, version:nwjs.VersionInfo, nwfile:string, packageJson:{name:string}, exclude:string[]):Promise<void>
 {
     const excludeMap = {};
     for(const ex of exclude)
         excludeMap[ex] = true;
     excludeMap['nw.exe'] = true;
 
-    const info = nwjs.VersionInfo.fromVersionText(version);
-
-    const srcdir = await info.getRootPath();
+    const srcdir = await version.getRootPath();
     if (srcdir === null) throw Error('Installed NWjs not found');
     for(const src of glob.sync([srcdir+'/**']))
     {
@@ -189,7 +176,7 @@ async function makeNWjs(outdir:string, version:string, nwfile:string, packageJso
     }
     else
     {
-        const nwjsPath = await info.getPath();
+        const nwjsPath = await version.getPath();
         if (nwjsPath === null) throw Error('Installed NWjs not found');
         const exepath = path.join(outdir, packageJson.name+'.exe');
         const fos = fs.createWriteStream(exepath);
@@ -199,27 +186,44 @@ async function makeNWjs(outdir:string, version:string, nwfile:string, packageJso
     }
 }
 
+function resolveToString(value:any):string
+{
+    if (value) return value + '';
+    return '';
+}
+
+function resolveToStringArray(value:any):string[]
+{
+    if (!(value instanceof Array)) return [];
+    return value.map(resolveToString);
+}
+
 async function publishNWjs():Promise<void>
 {
     if (!window.activeTextEditor) return;
 
     const config = nfs.readJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
     if (!config) throw new Error(NEED_PUBLISH_JSON);
-    var {html, files, exclude, nwjsVersion} = config;
-    var info:nwjs.VersionInfo;
-    if (!nwjsVersion || nwjsVersion === 'any')
+    const exclude = resolveToStringArray(config.exclude);
+    const files = resolveToStringArray(config.files);
+    const html = resolveToStringArray(config.html);
+    var version:nwjs.VersionInfo;
+    
     {
-        info = await nwjs.getLatestVersion();
-        if (!info) throw new Error(NEED_INSTALL);
-        nwjsVersion = info.version;
-    }
-    else
-    {
-        info = nwjs.VersionInfo.fromVersionText(nwjsVersion);
+        const versionText = resolveToString(config.nwjsVersion);
+        if (!versionText || versionText === 'any')
+        {
+            version = await nwjs.getLatestVersion();
+            if (!version) throw new Error(NEED_INSTALL);
+        }
+        else
+        {
+            version = nwjs.VersionInfo.fromVersionText(versionText);
+        }
     }
 
-    const nwjsPath = await info.getPath();
-    if (nwjsPath === null) throw new Error(NEED_INSTALL+'#'+nwjsVersion);
+    const nwjsPath = await version.getPath();
+    if (nwjsPath === null) throw new Error(NEED_INSTALL+'#'+version.versionText);
     const curdir = process.cwd();
     process.chdir(path.dirname(window.activeTextEditor.document.fileName));
 
@@ -266,7 +270,7 @@ async function publishNWjs():Promise<void>
         const binfilename = targets[src];
         const dest = path.join(bindir, binfilename);
         nfs.mkdir(path.dirname(dest));
-        await compileNWjs(nwjsVersion, src, dest);
+        await compileNWjs(version, src, dest);
         appendFile(binfilename, dest);
     }
     vs.log('Add files...');
@@ -282,7 +286,7 @@ async function publishNWjs():Promise<void>
     await nfs.eventToPromise(zipfos, 'close');
 
     vs.log('Generate exe...');
-    await makeNWjs(publishdir,nwjsVersion,zippath,packagejson, exclude);
+    await makeNWjs(publishdir,version,zippath,packagejson, exclude);
     process.chdir(curdir);
     vs.log('Complete');
 }
@@ -334,7 +338,7 @@ function oncatch(err:Error):Thenable<void>
         return vs.errorBox('Need install NWjs!', 'Install')
         .then((select)=>{
             if (!select) return;
-            return installNWjs(param).catch(oncatch);
+            return installNWjs(nwjs.VersionInfo.fromVersionText(param)).catch(oncatch);
         });
     case NEED_PUBLISH_JSON:
         return vs.errorBox('Need nwjs.publish.json!', 'Generate')
