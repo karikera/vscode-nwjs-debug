@@ -137,7 +137,7 @@ export class VersionInfo
         sdkv.platform = this.platform;
         sdkv.arch = this.arch;
         sdkv.update();
-        return VersionInfo.fromVersionText(this.versionText);
+        return sdkv;
     }
 
     public isAvailable():boolean
@@ -332,6 +332,7 @@ function getFirstOfArray<T>(array:T[], cmp:(v1:T,v2:T)=>number):T|undefined
 
 export function getLatestVersion(filter?:(ver:VersionInfo)=>boolean):Promise<VersionInfo>
 {
+    if (!filter) filter = ()=>true;
     return list(ver=>ver.isAvailable() && filter(ver)).then(vers=>{
         if (vers.length === 0) return null;
         return vers[0];
