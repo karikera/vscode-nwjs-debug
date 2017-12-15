@@ -62,15 +62,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 }
 
                 runtimeExecutable = re;
-			}
+            }
+            
             // XXX: need to merge
-            var chromePath = args.runtimeExecutable;
-            if (!chromePath) {
+            if (!runtimeExecutable) {
                 const version = args.nwjsVersion;
                 if (version && version !== 'any')
                 {
-                    chromePath = nwjs.VersionInfo.fromVersionText(version + '-sdk').getPathSync();
-                    if (!chromePath) 
+                    runtimeExecutable = nwjs.VersionInfo.fromVersionText(version + '-sdk').getPathSync();
+                    if (!runtimeExecutable) 
                     {
                         return coreUtils.errP(`Need to install NWjs ${version}! - Please use "NWjs Install" command.`);
                     }
@@ -82,24 +82,19 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                     {
                         return coreUtils.errP(`Need to install NWjs! - Please use "NWjs Install" command.`);
                     }
-                    chromePath = latest.getPathSync();
-                    if (!chromePath) 
+                    runtimeExecutable = latest.getPathSync();
+                    if (!runtimeExecutable) 
                     {
                         return coreUtils.errP(`Need to install NWjs! - Please use "NWjs Install" command.`);
                     }
                 }
             }
 
-            runtimeExecutable = runtimeExecutable || utils.getBrowserPath();
-            if (!runtimeExecutable) {
-                return coreUtils.errP(localize('attribute.chrome.missing', "Can't find Chrome - install it or set the \"runtimeExecutable\" field in the launch config."));
-            }
-
             // Start with remote debugging enabled
             const port = args.port || 9222;
             const chromeArgs: string[] = [];
             const chromeEnv: {[key: string]: string} = args.env || null;
-            const chromeWorkingDir: string = args.cwd || null;
+            const chromeWorkingDir: string = args.cwd || args.webRoot;
 
             if (!args.noDebug) {
                 chromeArgs.push('--remote-debugging-port=' + port);
@@ -120,28 +115,21 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
             }
 
-            // let launchUrl: string;
-            // if (args.file) {
-            //     launchUrl = coreUtils.pathToFileURL(args.file);
-            // } else if (args.url) {
-            //     launchUrl = args.url;
-            // }
-
 	        const config = nfs.readJson(args.webRoot+"/package.json", DEFAULT_PACKAGE_JSON, true);
-	        const launchUrl = 'chrome-extension://*/' + config.main;
-            if (launchUrl) {
-                if (this.breakOnLoadActive) {
-                    // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
-                    // This is done to facilitate hitting breakpoints on load
-                    this._userRequestedUrl = launchUrl;
-                    launchUrl = "about:blank";
-                }
+	        var launchUrl = 'chrome-extension://*/' + config.main;
 
-                chromeArgs.push(launchUrl);
+            if (this.breakOnLoadActive) {
+                // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
+                // This is done to facilitate hitting breakpoints on load
+                this._userRequestedUrl = config.main;
+                chromeArgs.push('.');
+            }
+            else
+            {
+                chromeArgs.push('.');
             }
 
-            chromeArgs.push('.');
-			chromeWorkingDir = args.webRoot; /// ???
+			
             this._chromeProc = this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'NWJS error: ' + err;
@@ -165,7 +153,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public configurationDone(): Promise<void> {
         if (this.breakOnLoadActive && this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-            this.chrome.Page.navigate({ url: this._userRequestedUrl });
+            // this.chrome.Page.navigate({ url: this._userRequestedUrl });
+            // const source = `location.href=${JSON.stringify(this._userRequestedUrl)};`;
+            // this.chrome.Page.navigate({url:'javascript:'+source});
+            this.chrome.Page.reload({});
         }
 
         return super.configurationDone();

@@ -1,3 +1,6 @@
+# 1.0.12
+* Update to vscode-chrome-debug-core@3.21.0
+
 # 1.0.11
 * Fixed several breaking issues of version 1.0.10 (by bejonwe)
 

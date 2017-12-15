@@ -3,9 +3,9 @@
     "properties":{
         "nwjsVersion":{
             "type": "string",
-            "description": "NWjs version",
+            "description": "Using NWjs version, You can use other archtechure with postfix.\nArchtechture: ia32, x64\n ex) 0.14.7(ia32)",
             "default": "any",
-            "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+(-(alpha[0-9]+|beta[0-9]+|rc[0-9]+))?(\\(ai32|x64\\))?|any)$"
+            "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+(-(alpha[0-9]+|beta[0-9]+|rc[0-9]+))?(\\((ia32|x64)\\))?|any)$"
         },
         "package":{
             "$ref": "package.schema.json",
@@ -13,17 +13,17 @@
         },
         "html":{
             "type": "array",
-            "description": "Contains html files. Can use glob.\nReferenced scripts will compiled by nwjc",
+            "description": "HTML files to include. You can use glob.\nReferenced scripts will compiled by nwjc",
             "items":{"type":"string"}
         },
         "files":{
             "type": "array",
-            "description": "Contains files. Can use glob. will compressed by zip",
+            "description": "Files to include. You can use glob. it will compressed by zip",
             "items":{"type":"string"}
         },
         "exclude":{
             "type": "array",
-            "description": "Exclude file from nwjs files. for unusing DLL",
+            "description": "Files to exclude from nwjs luncher. It can exclude unusing DLL",
             "items":{"type":"string"}
         }
     }
