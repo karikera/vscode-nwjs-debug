@@ -8,7 +8,23 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "isBackground": true
+        },
+        {
+            "type": "gulp",
+            "task": "i18n-import",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "add-i18n",
+            "problemMatcher": []
+        },
+        {
+            "type": "gulp",
+            "task": "transifex-pull",
+            "problemMatcher": []
         }
     ]
 }

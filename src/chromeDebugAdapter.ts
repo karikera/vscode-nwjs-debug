@@ -3,17 +3,22 @@
  *--------------------------------------------------------*/
 
 import * as os from 'os';
+import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
 import * as utils from './utils';
+import * as errors from './errors';
 import * as nfs from './util/nfs';
 import * as nwjs from './nwjs/nwjs';
+
+import * as nls from 'vscode-nls';
+const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///./~/*': '${webRoot}/node_modules/*',
@@ -33,6 +38,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
     private _chromePID: number;
+    private _userRequestedUrl: string;
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -43,8 +49,21 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
+        if (args.breakOnLoad && !args.breakOnLoadStrategy) {
+            args.breakOnLoadStrategy = 'instrument';
+        }
+
         return super.launch(args).then(() => {
-            // Check exists?
+            let runtimeExecutable: string;
+            if (args.runtimeExecutable) {
+                const re = findExecutable(args.runtimeExecutable);
+                if (!re) {
+                    return errors.getNotExistErrorResponse('runtimeExecutable', args.runtimeExecutable);
+                }
+
+                runtimeExecutable = re;
+			}
+            // XXX: need to merge
             var chromePath = args.runtimeExecutable;
             if (!chromePath) {
                 const version = args.nwjsVersion;
@@ -71,9 +90,16 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 }
             }
 
+            runtimeExecutable = runtimeExecutable || utils.getBrowserPath();
+            if (!runtimeExecutable) {
+                return coreUtils.errP(localize('attribute.chrome.missing', "Can't find Chrome - install it or set the \"runtimeExecutable\" field in the launch config."));
+            }
+
             // Start with remote debugging enabled
             const port = args.port || 9222;
             const chromeArgs: string[] = [];
+            const chromeEnv: {[key: string]: string} = args.env || null;
+            const chromeWorkingDir: string = args.cwd || null;
 
             if (!args.noDebug) {
                 chromeArgs.push('--remote-debugging-port=' + port);
@@ -103,9 +129,20 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
 	        const config = nfs.readJson(args.webRoot+"/package.json", DEFAULT_PACKAGE_JSON, true);
 	        const launchUrl = 'chrome-extension://*/' + config.main;
+            if (launchUrl) {
+                if (this.breakOnLoadActive) {
+                    // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
+                    // This is done to facilitate hitting breakpoints on load
+                    this._userRequestedUrl = launchUrl;
+                    launchUrl = "about:blank";
+                }
+
+                chromeArgs.push(launchUrl);
+            }
 
             chromeArgs.push('.');
-            this._chromeProc = this.spawnChrome(chromePath, chromeArgs, !!args.runtimeExecutable, args.webRoot);
+			chromeWorkingDir = args.webRoot; /// ???
+            this._chromeProc = this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'NWJS error: ' + err;
                 logger.error(errMsg);
@@ -123,6 +160,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         return super.attach(args);
+    }
+
+    public configurationDone(): Promise<void> {
+        if (this.breakOnLoadActive && this._userRequestedUrl) {
+            // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
+            this.chrome.Page.navigate({ url: this._userRequestedUrl });
+        }
+
+        return super.configurationDone();
     }
 
     public commonArgs(args: ICommonRequestArgs): void {
@@ -160,9 +206,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         ];
     }
 
-    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: stoppedEvent.ReasonType): void {
-        this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
-        super.onPaused(notification, expectingStopReason);
+    protected async onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason = this._expectingStopReason): Promise<void> {
+        this._overlayHelper.doAndCancel(() => {
+            return this._domains.has('Overlay') ?
+                this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }) :
+                (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { });
+        });
+
+        return super.onPaused(notification, expectingStopReason);
     }
 
     protected threadName(): string {
@@ -170,7 +221,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected onResumed(): void {
-        this._overlayHelper.wait(() => this.chrome.Page.configureOverlay({ }).catch(() => { }));
+        this._overlayHelper.wait(() => {
+            return this._domains.has('Overlay') ?
+                this.chrome.Overlay.setPausedInDebuggerMessage({ }).catch(() => { }) :
+                (<any>this.chrome).Page.configureOverlay({ }).catch(() => { });
+        });
         super.onResumed();
     }
 
@@ -206,12 +261,27 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
      * Opt-in event called when the 'reload' button in the debug widget is pressed
      */
     public restart(): Promise<void> {
-        return this.chrome.Page.reload({ ignoreCache: true });
+        return this.chrome ?
+            this.chrome.Page.reload({ ignoreCache: true }) :
+            Promise.resolve();
     }
 
-    private spawnChrome(chromePath: string, chromeArgs: string[], usingRuntimeExecutable: boolean, cwd:string): ChildProcess {
+    private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
-            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], { execArgv: [], silent: true, cwd });
+            const options = {
+                execArgv: [],
+                silent: true
+            };
+            if (env) {
+                options['env'] = {
+                    ...process.env,
+                    ...env
+                };
+            }
+            if (cwd) {
+                options['cwd'] = cwd;
+            }
+            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], options);
             chromeProc.unref();
 
             chromeProc.on('message', data => {
@@ -236,11 +306,20 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             return chromeProc;
         } else {
             logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-            const chromeProc = spawn(chromePath, chromeArgs, {
+            const options = {
                 detached: true,
                 stdio: ['ignore'],
-                cwd
-            });
+            };
+            if (env) {
+                options['env'] = {
+                    ...process.env,
+                    ...env
+                };
+            }
+            if (cwd) {
+                options['cwd'] = cwd;
+            }
+            const chromeProc = spawn(chromePath, chromeArgs, options);
             chromeProc.unref();
             return chromeProc;
         }
@@ -262,33 +341,57 @@ function getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISo
 
 /**
  * Returns a copy of sourceMapPathOverrides with the ${webRoot} pattern resolved in all entries.
+ *
+ * dynamically required by test
  */
 export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
     const resolvedOverrides: ISourceMapPathOverrides = {};
     for (let pattern in sourceMapPathOverrides) {
-        const replacePattern = sourceMapPathOverrides[pattern];
-        resolvedOverrides[pattern] = replacePattern;
+        const replacePattern = replaceWebRootInSourceMapPathOverridesEntry(webRoot, pattern, warnOnMissing);
+        const replacePatternValue = replaceWebRootInSourceMapPathOverridesEntry(webRoot, sourceMapPathOverrides[pattern], warnOnMissing);
 
-        const webRootIndex = replacePattern.indexOf('${webRoot}');
-        if (webRootIndex === 0) {
-            if (webRoot) {
-                resolvedOverrides[pattern] = replacePattern.replace('${webRoot}', webRoot);
-            } else if (warnOnMissing) {
-                logger.log('Warning: sourceMapPathOverrides entry contains ${webRoot}, but webRoot is not set');
-            }
-        } else if (webRootIndex > 0) {
-            logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
-        }
+        resolvedOverrides[replacePattern] = replacePatternValue;
     }
 
     return resolvedOverrides;
 }
 
-function getChromeSpawnHelperPath(): string {
-    if (path.basename(__dirname) === 'src') {
-        // For tests
-        return path.join(__dirname, '../chromeSpawnHelper.js');
-    } else {
-        return path.join(__dirname, 'chromeSpawnHelper.js');
+function replaceWebRootInSourceMapPathOverridesEntry(webRoot: string, entry: string, warnOnMissing: boolean): string {
+    const webRootIndex = entry.indexOf('${webRoot}');
+    if (webRootIndex === 0) {
+        if (webRoot) {
+            return entry.replace('${webRoot}', webRoot);
+        } else if (warnOnMissing) {
+            logger.log('Warning: sourceMapPathOverrides entry contains ${webRoot}, but webRoot is not set');
+        }
+    } else if (webRootIndex > 0) {
+        logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
     }
+
+    return entry;
+}
+
+function getChromeSpawnHelperPath(): string {
+    return path.join(__dirname, 'chromeSpawnHelper.js');
+}
+
+function findExecutable(program: string): string | undefined {
+    if (process.platform === 'win32' && !path.extname(program)) {
+        const PATHEXT = process.env['PATHEXT'];
+        if (PATHEXT) {
+            const executableExtensions = PATHEXT.split(';');
+            for (const extension of executableExtensions) {
+                const path = program + extension;
+                if (fs.existsSync(path)) {
+                    return path;
+                }
+            }
+        }
+    }
+
+    if (fs.existsSync(program)) {
+        return program;
+    }
+
+    return undefined;
 }
