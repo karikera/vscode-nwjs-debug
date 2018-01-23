@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "icon": "images/icon.png",
   "description": "NWjs Debugger",
   "author": {

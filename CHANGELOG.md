@@ -1,3 +1,6 @@
+# 1.0.13
+* Fix toggleSkippingFile
+
 # 1.0.12
 * Update to vscode-chrome-debug-core@3.21.0
 
