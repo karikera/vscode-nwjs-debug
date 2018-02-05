@@ -115,7 +115,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
             }
 
-	        const config = nfs.readJson(args.webRoot+"/package.json", DEFAULT_PACKAGE_JSON, true);
+	        const config = nfs.readJsonSync(args.webRoot+"/package.json", DEFAULT_PACKAGE_JSON, true);
 	        var launchUrl = 'chrome-extension://*/' + config.main;
 
             if (this.breakOnLoadActive) {

@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+const { window } = vscode;
 import * as Core from 'vscode-chrome-debug-core';
 
 import {targetFilter} from './utils';
@@ -10,11 +11,9 @@ import {targetFilter} from './utils';
 import * as nls from 'vscode-nls';
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
-const {window} = vscode;
 import * as fs from 'fs';
 import * as path from 'path';
-import archiver = require('archiver');
-import * as glob from 'glob-all';
+import globby = require('globby');
 
 import * as nwjs from './nwjs/nwjs';
 import * as os from './nwjs/os';
@@ -22,6 +21,7 @@ import {run} from './util/run';
 import * as nfs from './util/nfs';
 import * as vs from './util/vs';
 import * as util from './util/util';
+import { Publisher, ZipPublisher, FilePublisher } from './util/publisher';
 
 const NEED_INSTALL = 'NEED_INSTALL';
 const NEED_PUBLISH_JSON = 'NEED_PUBLISH_JSON';
@@ -119,20 +119,19 @@ async function compileNWjs(version?:nwjs.VersionInfo, filename?:string, outputFi
     await run(path, [filename, outputFile], str=>vs.log(str));
 }
 
-async function makeNWjs(outdir:string, version:nwjs.VersionInfo, nwfile:string, packageJson:{name:string}, exclude:string[]):Promise<void>
+async function copyNWjs(outdir:string, version:nwjs.VersionInfo, exclude:string[]):Promise<void>
 {
-    const excludeMap = {};
+    const excludeMap:{[key:string]:boolean} = {};
     for(const ex of exclude)
         excludeMap[ex] = true;
-    excludeMap['nw.exe'] = true;
 
     const srcdir = await version.getRootPath();
     if (srcdir === null) throw Error('Installed NWjs not found');
-    for(const src of glob.sync([srcdir+'/**']))
+    for(const src of await globby([srcdir+'/**']))
     {
         const name = src.substr(srcdir.length+1);
         if (name in excludeMap) continue;
-        const dest = path.join(outdir,name);
+        const dest = path.join(outdir, name);
         if (fs.statSync(src).isDirectory())
         {
             try{fs.mkdirSync(dest);}catch(e){}
@@ -142,12 +141,15 @@ async function makeNWjs(outdir:string, version:nwjs.VersionInfo, nwfile:string, 
             await nfs.copy(src, dest);
         }
     }
+}
 
+async function publishNWjsExe(outdir:string, version:nwjs.VersionInfo, nwfile:string, packageJson:{name:string}):Promise<void>
+{
     if(os.platform === 'osx')
     {
         // Contents/Resources/nw.icns: icon of your app.
         // Contents/Info.plist: the apple package description file.
-        await nfs.copy(nwfile, path.join(outdir,'nwjs.app/Contents/Resources/app.nw'));
+        await nfs.copy(nwfile, path.join(outdir, 'nwjs.app/Contents/Resources/app.nw'));
     }
     else
     {
@@ -163,9 +165,7 @@ async function makeNWjs(outdir:string, version:nwjs.VersionInfo, nwfile:string, 
 
 async function publishNWjs():Promise<void>
 {
-    if (!window.activeTextEditor) return;
-    
-    const config = nfs.readJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
+    const config = await nfs.readJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
     if (!config) throw new Error(NEED_PUBLISH_JSON);
     const exclude = resolveToStringArray(config.exclude);
     const files = resolveToStringArray(config.files);
@@ -187,83 +187,85 @@ async function publishNWjs():Promise<void>
 
     const nwjsPath = await version.getPath();
     if (nwjsPath === null) throw new Error(NEED_INSTALL+'#'+version.versionText);
-    const curdir = process.cwd();
-    process.chdir(path.dirname(window.activeTextEditor.document.fileName));
-
 
     const targets = {};
     const bindir = 'bin';
     const publishdir = 'publish';
-    const packagejson = nfs.readJson('package.json', DEFAULT_PACKAGE_JSON);
+    const packagejson = await nfs.readJson('package.json', DEFAULT_PACKAGE_JSON);
     if (!packagejson) throw new Error(NEED_PACKAGE_JSON);
 
     util.override(packagejson, config.package);
 
-    nfs.mkdir(bindir);
-    nfs.mkdir(publishdir);
+    await nfs.mkdir(bindir);
+    await nfs.mkdir(publishdir);
     const zippath = path.join(bindir, packagejson.name+'.zip');
+    
+    var publisher:Publisher;
+    if (config.zip)
+    {
+        publisher = new ZipPublisher(zippath);
+    }
+    else
+    {
+        publisher = new FilePublisher(publishdir);
+    }
+    publisher.file('package.json', JSON.stringify(packagejson));
+
     vs.show();
+
     vs.log('Convert html...');
-
-    const archive = archiver('zip', {store: true});
-    const zipfos = fs.createWriteStream(zippath);
-    archive.pipe(zipfos);
-
-    function appendText(filename:string, text:string):void
-    {
-        archive.append(text, { name: filename });
-    }
-    function appendFile(filename:string, from?:string):void
-    {
-        if (from === undefined) from = filename;
-        (<any>archive).file(from, { name: filename });
-    }
-
-    appendText('package.json', JSON.stringify(packagejson));
-
-    for(const src of glob.sync(html))
+    for(const src of await globby(html))
     {
         vs.log(src);
         const script = await nfs.readFile(src);
-        appendText(src, replaceScriptTag(script, targets));
+        publisher.text(src, replaceScriptTag(script, targets));
     }
+
     vs.log('Compile js...');
     for(const src in targets)
     {
         vs.log(src);
         const binfilename = targets[src];
         const dest = path.join(bindir, binfilename);
-        nfs.mkdir(path.dirname(dest));
+        await nfs.mkdir(path.dirname(dest));
         await compileNWjs(version, src, dest);
-        appendFile(binfilename, dest);
+        publisher.file(binfilename, dest);
     }
-    vs.log('Add files...');
-    for(const src of glob.sync(files))
+
+    vs.log('Copy files...');
+    for(const src of await globby(files))
     {
         if (fs.statSync(src).isDirectory()) continue;
         vs.log(src);
-        appendFile(src);
+        publisher.file(src);
     }
 
-    vs.log('Flush zip...');
-    archive.finalize();
-    await nfs.eventToPromise(zipfos, 'close');
+    await publisher.finalize();
 
     vs.log('Generate exe...');
-    await makeNWjs(publishdir,version,zippath,packagejson, exclude);
-    process.chdir(curdir);
+    if (config.zip)
+    {
+        exclude.push('nw.exe');
+        await copyNWjs(publishdir, version, exclude);
+        await publishNWjsExe(publishdir, version, zippath, packagejson);
+    }
+    else
+    {
+        await copyNWjs(publishdir, version, exclude);
+    }
+
     vs.log('Complete');
 }
 
 async function generatePublishJson():Promise<void>
 {
-    nfs.writeJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
+    await nfs.writeJson('nwjs.publish.json', DEFAULT_PUBLISH_JSON);
     vs.open(path.resolve('nwjs.publish.json'));
 }
 
 async function generatePackageJson():Promise<void>
 {
-    nfs.writeJson('package.json', DEFAULT_PACKAGE_JSON);
+    await nfs.writeJson('package.json', DEFAULT_PACKAGE_JSON);
     vs.open(path.resolve('package.json'));
 }
 
