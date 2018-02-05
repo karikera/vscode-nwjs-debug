@@ -13,17 +13,17 @@
         },
         "html":{
             "type": "array",
-            "description": "HTML files to include. You can use glob.\nReferenced scripts will compiled by nwjc",
+            "description": "HTML files to include. You can use glob.\nReferenced scripts will compiled by nwjc\nIf you do not want compiling, use 'files' option instead",
             "items":{"type":"string"}
         },
         "files":{
             "type": "array",
-            "description": "Files to include. You can use glob. it will compressed by zip",
+            "description": "Files to include. You can use glob. it will compressed by zip if you use zip option",
             "items":{"type":"string"}
         },
         "exclude":{
             "type": "array",
-            "description": "Files to exclude from nwjs luncher. It can exclude unusing DLL",
+            "description": "Files to exclude from nwjs luncher(NOT from 'files' field, If you want to exclude from `files`, use '!' prefix in `files`). It can exclude unusing DLL",
             "items":{"type":"string"}
         },
         "zip":{
