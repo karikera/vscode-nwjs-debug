@@ -447,8 +447,10 @@ function toggleSkippingFile(path: string): void {
         path = activeEditor && activeEditor.document.fileName;
     }
 
-    const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
-    vscode.commands.executeCommand('workbench.customRequest', 'toggleSkipFileStatus', args);
+    if (path && vscode.debug.activeDebugSession) {
+        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
+        vscode.debug.activeDebugSession.customRequest('toggleSkipFileStatus', args);
+    }
 }
 
 interface ITargetQuickPickItem extends vscode.QuickPickItem {
