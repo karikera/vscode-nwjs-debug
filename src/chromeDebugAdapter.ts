@@ -64,7 +64,6 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 runtimeExecutable = re;
             }
             
-            // XXX: need to merge
             if (!runtimeExecutable) {
                 const version = args.nwjsVersion;
                 if (version && version !== 'any')

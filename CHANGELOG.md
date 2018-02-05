@@ -1,3 +1,8 @@
+# 1.0.14
+* Changed to unzipped publish defaulty and Added `zip` option in nwjs.publish.json
+* Added `postPublish` & `prePublish` option in nwjs.publish.json
+* Added initialConfigurations
+
 # 1.0.13
 * Fix toggleSkippingFile
 

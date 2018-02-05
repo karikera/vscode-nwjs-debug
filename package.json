@@ -1,7 +1,7 @@
 {
   "name": "vsc-nwjs",
   "displayName": "Debugger for NWjs",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "icon": "images/icon.png",
   "description": "NWjs Debugger",
   "author": {
@@ -36,6 +36,7 @@
     "nugget": "^1.6.0",
     "pify": "^2.3.0",
     "shelljs": "^0.6.0",
+    "spawn-command": "^0.0.2-1",
     "user-home": "^2.0.0"
   },
   "devDependencies": {
@@ -121,12 +122,27 @@
         "label": "NWjs",
         "program": "./out/src/chromeDebug.js",
         "runtime": "node",
-        "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "languages": [
           "javascript",
           "typescript",
           "javascriptreact",
           "typescriptreact"
+        ],
+        "initialConfigurations": [
+          {
+            "type": "nwjs",
+            "request": "launch",
+            "name": "Launch NWjs",
+            "nwjsVersion": "any",
+            "webRoot": "${workspaceFolder}"
+          },
+          {
+            "type": "nwjs",
+            "request": "attach",
+            "name": "Attach to NWjs",
+            "port": 9222,
+            "webRoot": "${workspaceFolder}"
+          }
         ],
         "configurationSnippets": [
           {
@@ -136,18 +152,17 @@
               "type": "nwjs",
               "request": "launch",
               "name": "Launch NWjs",
-              "url": "http://localhost:8080",
               "nwjsVersion": "any",
               "webRoot": "^\"${2:\\${workspaceFolder\\}}\""
             }
           },
           {
-            "label": "Chrome: Attach",
-            "description": "Attach to an instance of Chrome already in debug mode",
+            "label": "NWjs: Attach",
+            "description": "Attach to an instance of NWjs already in debug mode",
             "body": {
-              "type": "chrome",
+              "type": "nwjs",
               "request": "attach",
-              "name": "Attach to Chrome",
+              "name": "Attach to NWjs",
               "port": 9222,
               "webRoot": "^\"${2:\\${workspaceFolder\\}}\""
             }
@@ -159,7 +174,7 @@
             "properties": {
               "port": {
                 "type": "number",
-                "description": "Port to use for NWJS remote debugging.",
+                "description": "%chrome.port.description%",
                 "default": 9222
               },
               "nwjsVersion": {
@@ -170,7 +185,7 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
+                "description": "%chrome.webRoot.description%",
                 "default": "${workspaceFolder}"
               },
               "pathMapping": {

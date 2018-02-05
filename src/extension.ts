@@ -22,6 +22,7 @@ import * as nfs from './util/nfs';
 import * as vs from './util/vs';
 import * as util from './util/util';
 import { Publisher, ZipPublisher, FilePublisher } from './util/publisher';
+import { exec } from './util/exec';
 
 const NEED_INSTALL = 'NEED_INSTALL';
 const NEED_PUBLISH_JSON = 'NEED_PUBLISH_JSON';
@@ -132,9 +133,14 @@ async function copyNWjs(outdir:string, version:nwjs.VersionInfo, exclude:string[
         const name = src.substr(srcdir.length+1);
         if (name in excludeMap) continue;
         const dest = path.join(outdir, name);
-        if (fs.statSync(src).isDirectory())
+        const stat = await nfs.stat(src);
+        if (stat.isDirectory())
         {
-            try{fs.mkdirSync(dest);}catch(e){}
+            try
+            {
+                await nfs.mkdir(dest);
+            }
+            catch(e){}
         }
         else
         {
@@ -209,16 +215,22 @@ async function publishNWjs():Promise<void>
     {
         publisher = new FilePublisher(publishdir);
     }
-    publisher.file('package.json', JSON.stringify(packagejson));
+    await publisher.text('package.json', JSON.stringify(packagejson));
 
     vs.show();
+
+    if (config.postPublish)
+    {
+        vs.log('Run prePublish...');
+        await exec(config.prePublish, vs.log, vs.log);
+    }
 
     vs.log('Convert html...');
     for(const src of await globby(html))
     {
         vs.log(src);
         const script = await nfs.readFile(src);
-        publisher.text(src, replaceScriptTag(script, targets));
+        await publisher.text(src, replaceScriptTag(script, targets));
     }
 
     vs.log('Compile js...');
@@ -229,7 +241,7 @@ async function publishNWjs():Promise<void>
         const dest = path.join(bindir, binfilename);
         await nfs.mkdir(path.dirname(dest));
         await compileNWjs(version, src, dest);
-        publisher.file(binfilename, dest);
+        await publisher.file(binfilename, dest);
     }
 
     vs.log('Copy files...');
@@ -237,7 +249,7 @@ async function publishNWjs():Promise<void>
     {
         if (fs.statSync(src).isDirectory()) continue;
         vs.log(src);
-        publisher.file(src);
+        await publisher.file(src);
     }
 
     await publisher.finalize();
@@ -253,7 +265,11 @@ async function publishNWjs():Promise<void>
     {
         await copyNWjs(publishdir, version, exclude);
     }
-
+    if (config.postPublish)
+    {
+        vs.log('Run postPublish...');
+        await exec(config.postPublish, vs.log, vs.log);
+    }
     vs.log('Complete');
 }
 

@@ -25,6 +25,18 @@
             "type": "array",
             "description": "Files to exclude from nwjs luncher. It can exclude unusing DLL",
             "items":{"type":"string"}
+        },
+        "zip":{
+            "type": "boolean",
+            "description": "Zip content files"
+        },
+        "prePublish":{
+            "type": "string",
+            "description": "shell on pre publish"
+        },
+        "postPublish":{
+            "type": "string",
+            "description": "shell on post publish"
         }
     }
 }

@@ -1,13 +1,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-
-export function eventToPromise(stream:NodeJS.EventEmitter, evname:string):Promise<void>
-{
-    return new Promise<void>((resolve)=>{
-        stream.on(evname, resolve);
-    });
-}
+import { trimLastNewline } from 'vscode-chrome-debug-core/lib/src/utils';
 
 export function readJsonSync(file:string, def?:Object, forceCreate?:boolean):any
 {
@@ -86,6 +80,25 @@ function mkdirOne(dirPath:string):Promise<void>
     });
 }
 
+function copyOnly(from:string, to:string):Promise<void>
+{
+    return new Promise<void>((resolve, reject)=>{
+        const fos = fs.createWriteStream(to);
+        fs.createReadStream(from).pipe(fos).on('error', reject);
+        fos.on('error', reject).on('close', resolve);
+    });
+}
+
+export function stat(path:string):Promise<fs.Stats>
+{
+    return new Promise((resolve, reject)=>{
+        fs.stat(path, (err, stats)=>{
+            if (err) reject(err);
+            else resolve(stats);
+        });
+    });
+}
+
 export async function mkdir(dirPath:string):Promise<void>
 {
     try
@@ -130,16 +143,28 @@ export function mkdirSync(dirPath:string):void
 
 export function writeTo(filename:string, fos:fs.WriteStream):Promise<void>
 {
-    const read = fs.createReadStream(filename);
-    read.pipe(fos, {end: false});
-    return eventToPromise(read, 'end');
+    return new Promise<void>((resolve, reject)=>{
+        const read = fs.createReadStream(filename);
+        read.pipe(fos, {end: false});
+        read.on('error', reject);
+        read.on('end', resolve);
+    });
 }
 
-export function copy(from:string, to:string):Promise<void>
+export async function copy(from:string, to:string):Promise<void>
 {
-    const fos = fs.createWriteStream(to);
-    fs.createReadStream(from).pipe(fos);
-    return eventToPromise(fos, 'close');
+    try
+    {
+        await copyOnly(from, to);
+    }
+    catch (err)
+    {
+        if (err.code === 'ENOENT')
+        {
+            await mkdir(path.dirname(to));
+            await copyOnly(from, to);
+        }
+    }
 }
 
 export function writeFile(path:string, data:string):Promise<void>

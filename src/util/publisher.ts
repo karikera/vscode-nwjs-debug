@@ -45,7 +45,11 @@ export class ZipPublisher extends Publisher
     finalize():Promise<void>
     {
         vs.log('Flush zip...');
-        return nfs.eventToPromise(this.zipfos, 'close');
+        this.archive.finalize();
+        return new Promise<void>((resolve, reject)=>{
+            this.zipfos.on('close', resolve);
+            this.zipfos.on('error', reject);
+        });
     }
 }
 
