@@ -1,3 +1,6 @@
+# 1.0.16
+* Fix specific platform debugging error
+
 # 1.0.15
 * Fix launch error
 

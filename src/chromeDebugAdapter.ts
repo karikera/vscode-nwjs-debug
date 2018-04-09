@@ -68,7 +68,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 const version = args.nwjsVersion;
                 if (version && version !== 'any')
                 {
-                    runtimeExecutable = nwjs.VersionInfo.fromVersionText(version + '-sdk').getPathSync();
+                    runtimeExecutable = nwjs.VersionInfo.fromVersionText(version).getSdkVersion().getPathSync();
                     if (!runtimeExecutable) 
                     {
                         return coreUtils.errP(`Need to install NWjs ${version}! - Please use "NWjs Install" command.`);
