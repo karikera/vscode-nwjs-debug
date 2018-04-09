@@ -2,19 +2,20 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugProtocol} from 'vscode-debugprotocol';
-import {chromeConnection, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
-import {EventEmitter} from 'events';
+import { EventEmitter } from 'events';
 import * as assert from 'assert';
-import {Mock, MockBehavior, It} from 'typemoq';
+import { Mock, MockBehavior, It } from 'typemoq';
 
-import {getMockChromeConnectionApi, IMockChromeConnectionAPI} from './debugProtocolMocks';
+import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
 import * as testUtils from './testUtils';
 
 /** Not mocked - use for type only */
-import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../src/chromeDebugAdapter';
+import {ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
+import { StepProgressEventsEmitter } from 'vscode-chrome-debug-core/out/src/executionTimingsReporter';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
@@ -34,6 +35,7 @@ suite('ChromeDebugAdapter', () => {
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
+        testUtils.registerLocMocks();
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
@@ -54,6 +56,9 @@ suite('ChromeDebugAdapter', () => {
             .returns(() => Promise.resolve());
         mockChromeConnection
             .setup(x => x.onClose(It.isAny()));
+        mockChromeConnection
+            .setup(x => x.events)
+            .returns(x => new StepProgressEventsEmitter());
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
@@ -76,7 +81,7 @@ suite('ChromeDebugAdapter', () => {
             // Hacky mock cleanup
             require('child_process').fork = originalFork;
             require('fs').statSync = originalStatSync;
-        })
+        });
 
         test('launches with minimal correct args', () => {
             let spawnCalled = false;
@@ -89,7 +94,7 @@ suite('ChromeDebugAdapter', () => {
             function spawn(chromePath: string, args: string[]): any {
                 assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
-                assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
+                assert(args.indexOf('about:blank') >= 0); // Now we use the landing page for all scenarios
                 assert(args.indexOf('abc') >= 0);
                 assert(args.indexOf('def') >= 0);
                 spawnCalled = true;
@@ -116,7 +121,8 @@ suite('ChromeDebugAdapter', () => {
                 .setup(x => x.evaluate(It.isAny()))
                 .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
 
-            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
+            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] },
+                                             new telemetry.TelemetryPropertyCollector())
                 .then(() => assert(spawnCalled));
         });
     });
@@ -169,5 +175,5 @@ suite('ChromeDebugAdapter', () => {
                 resolveWebRootPattern(WEBROOT, overrides),
                 expOverrides);
         });
-    })
+    });
 });

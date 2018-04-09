@@ -6,10 +6,10 @@ import * as vscode from 'vscode';
 const { window } = vscode;
 import * as Core from 'vscode-chrome-debug-core';
 
-import {targetFilter} from './utils';
+import { targetFilter } from './utils';
 
 import * as nls from 'vscode-nls';
-const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
+const localize = nls.loadMessageBundle();
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -343,6 +343,7 @@ function oncatch(err:Error):Thenable<void>
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('vscode-nwjs.toggleSkippingFile', toggleSkippingFile));
+    context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSmartStep', toggleSmartStep));
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('chrome', new ChromeConfigurationProvider()));
     
@@ -410,7 +411,7 @@ export function deactivate() {
 const DEFAULT_CONFIG = {
     type: 'chrome',
     request: 'launch',
-    name: localize('chrome.launch.name', "Launch Chrome against localhost"),
+    name: localize('chrome.launch.name', 'Launch Chrome against localhost'),
     url: 'http://localhost:8080',
     webRoot: '${workspaceFolder}'
 };
@@ -420,9 +421,9 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
         return Promise.resolve([DEFAULT_CONFIG]);
     }
 
-	/**
-	 * Try to add all missing attributes to the debug configuration being launched.
-	 */
+    /**
+     * Try to add all missing attributes to the debug configuration being launched.
+     */
     async resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration> {
         // if launch.json is missing or empty
         if (!config.type && !config.request && !config.name) {
@@ -437,7 +438,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
             let targets;
             try {
-                targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, targetFilter, config.url);
+                targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, targetFilter, config.url || config.urlFilter);
             } catch (e) {
                 // Target not running?
             }
@@ -469,6 +470,12 @@ function toggleSkippingFile(path: string): void {
     }
 }
 
+function toggleSmartStep(): void {
+    if (vscode.debug.activeDebugSession) {
+        vscode.debug.activeDebugSession.customRequest('toggleSmartStep');
+    }
+}
+
 interface ITargetQuickPickItem extends vscode.QuickPickItem {
     websocketDebuggerUrl: string;
 }
@@ -480,7 +487,7 @@ async function pickTarget(targets: Core.chromeConnection.ITarget[]): Promise<ITa
         websocketDebuggerUrl: target.webSocketDebuggerUrl
     }));
 
-    const placeHolder = localize('chrome.targets.placeholder', "Select a tab");
+    const placeHolder = localize('chrome.targets.placeholder', 'Select a tab');
     const selected = await vscode.window.showQuickPick(items, { placeHolder, matchOnDescription: true, matchOnDetail: true });
     return selected;
 }

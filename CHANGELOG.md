@@ -1,5 +1,6 @@
 # 1.0.16
 * Fix specific platform debugging error
+* Update to vscode-chrome-debug-core@4.1.4
 
 # 1.0.15
 * Fix launch error

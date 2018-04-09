@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from 'path';
-import {utils as coreUtils, chromeConnection} from 'vscode-chrome-debug-core';
+import {utils as coreUtils, chromeConnection } from 'vscode-chrome-debug-core';
 
 export class DebounceHelper {
     private waitToken: any; // TS can't decide whether Timer or number...

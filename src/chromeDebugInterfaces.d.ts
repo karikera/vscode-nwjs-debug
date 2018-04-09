@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as Core from 'vscode-chrome-debug-core';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
     disableNetworkCache?: boolean;
@@ -19,10 +20,29 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequ
     stopOnEntry?: boolean;
     address?: string;
     port?: number;
-    userDataDir?: string;
+    userDataDir?: string|boolean;
     breakOnLoad?: boolean;
+    _clientOverlayPausedMessage?: string;
+    shouldLaunchChromeUnelevated?: boolean;
+
     nwjsVersion?:string;
 }
 
 export interface IAttachRequestArgs extends Core.IAttachRequestArgs, ICommonRequestArgs {
+}
+
+export interface ISetExpressionArgs {
+    expression: string;
+    value: string;
+    frameId: number;
+    format?: DebugProtocol.ValueFormat
+    timeout?: number;
+}
+
+export interface ISetExpressionResponseBody {
+    value: string;
+}
+
+export interface VSDebugProtocolCapabilities extends DebugProtocol.Capabilities {
+    supportsSetExpression?: boolean;
 }
