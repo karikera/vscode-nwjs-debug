@@ -192,16 +192,18 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public async configurationDone(): Promise<void> {
         if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-			if (false) {
+			/*
 	            this.chrome.Page.navigate({ url: this._userRequestedUrl }).then(() => {
 	                /* __GDPR__FRAGMENT__
 	                   "StepNames" : {
 	                      "RequestedNavigateToUserPage" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 	                   }
 	                 */
+                    /*
 	                this.events.emitMilestoneReached('RequestedNavigateToUserPage');
 	            });
-			}
+            }
+            */
 			this.chrome.Page.reload({});
         }
 
