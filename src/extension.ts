@@ -37,7 +37,8 @@ const DEFAULT_PUBLISH_JSON = {
 	"package":{},
 	"html":["index.html"],
 	"files":[],
-	"exclude": []
+    "exclude": [],
+    "publishDir": "publish"
 };
 
 var onProgress = false;
@@ -196,7 +197,7 @@ async function publishNWjs():Promise<void>
 
     const targets = {};
     const bindir = 'bin';
-    const publishdir = 'publish';
+    const publishdir = config.publishDir;
     const packagejson = await nfs.readJson('package.json', DEFAULT_PACKAGE_JSON);
     if (!packagejson) throw new Error(NEED_PACKAGE_JSON);
 
@@ -270,7 +271,14 @@ async function publishNWjs():Promise<void>
         vs.log('Run postPublish...');
         await exec(config.postPublish, vs.log, vs.log);
     }
-    vs.log('Complete');
+    if (path.isAbsolute(publishdir))
+    {
+        vs.log('Published to '+publishdir);
+    }
+    else
+    {
+        vs.log('Published to [projectdir]/'+publishdir);
+    }
 }
 
 async function generatePublishJson():Promise<void>

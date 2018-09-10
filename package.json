@@ -138,14 +138,16 @@
             "request": "launch",
             "name": "Launch NWjs",
             "nwjsVersion": "any",
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}",
+            "reloadAfterAttached": true
           },
           {
             "type": "nwjs",
             "request": "attach",
             "name": "Attach to NWjs",
             "port": 9222,
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}",
+            "reloadAfterAttached": true
           }
         ],
         "configurationSnippets": [
@@ -157,7 +159,8 @@
               "request": "launch",
               "name": "Launch NWjs",
               "nwjsVersion": "any",
-              "webRoot": "^\"${2:\\${workspaceFolder\\}}\""
+              "webRoot": "^\"${2:\\${workspaceFolder\\}}\"",
+              "reloadAfterAttached": false
             }
           },
           {
@@ -168,7 +171,8 @@
               "request": "attach",
               "name": "Attach to NWjs",
               "port": 9222,
-              "webRoot": "^\"${2:\\${workspaceFolder\\}}\""
+              "webRoot": "^\"${2:\\${workspaceFolder\\}}\"",
+              "reloadAfterAttached": false
             }
           }
         ],
@@ -320,6 +324,11 @@
                 ],
                 "description": "%chrome.breakOnLoadStrategy.description%",
                 "default": "instrument"
+              },
+              "reloadAfterAttached": {
+                  "type": "boolean",
+                  "description": "Reload the page after debugger attached",
+                  "default": true
               }
             }
           },
@@ -422,6 +431,11 @@
                 "type": "boolean",
                 "description": "%chrome.showAsyncStacks.description%",
                 "default": true
+              },
+              "reloadAfterAttached": {
+                  "type": "boolean",
+                  "description": "Reload the page after debugger attached",
+                  "default": true
               }
             }
           }

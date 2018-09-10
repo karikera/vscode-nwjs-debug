@@ -32,11 +32,16 @@
         },
         "prePublish":{
             "type": "string",
-            "description": "shell on pre publish"
+            "description": "Shell on pre publish"
         },
         "postPublish":{
             "type": "string",
-            "description": "shell on post publish"
+            "description": "Shell on post publish"
+        },
+        "publishDir":{
+            "type": "string",
+            "description": "Publish directory path",
+            "default":"publish"
         }
     }
 }

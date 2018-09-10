@@ -101,7 +101,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
 
             // Start with remote debugging enabled
-            const port = args.port || 9222;
+            const port = args.port || 9223;
             const chromeArgs: string[] = [];
             const chromeEnv: {[key: string]: string} = args.env || null;
             const chromeWorkingDir: string = args.cwd || args.webRoot;
@@ -204,8 +204,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 	            });
             }
             */
-			this.chrome.Page.reload({});
+           
+            if ((<ICommonRequestArgs>this._launchAttachArgs).reloadAfterAttached)
+            {
+                this.chrome.Page.reload({});
+            }
         }
+
+        
 
         await super.configurationDone();
     }

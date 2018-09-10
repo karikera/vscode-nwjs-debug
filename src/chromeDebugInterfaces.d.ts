@@ -8,6 +8,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
     disableNetworkCache?: boolean;
     urlFilter?: string;
+    reloadAfterAttached?: boolean;
 }
 
 export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequestArgs {

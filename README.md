@@ -47,5 +47,6 @@ You can set version in `nwjs.publish.json` also.
 
 ## Issues
 
-Chrome debugger will attach little later after launch,  
-If you want to debug a script that run immediately, You can use `Restart Debugger`(Ctrl+Shift+F5, It will just reload page)
+Debugger will reload the page after attached. This work will run script twice. If you want not to that, Please set `reloadAfterAttached` to `false` in `launch.json`.
+
+This extension use 9223 por.! If you want to change port, please set `port` field in `launch.json`.

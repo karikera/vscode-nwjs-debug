@@ -1,7 +1,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { trimLastNewline } from 'vscode-chrome-debug-core/lib/src/utils';
+// import { trimLastNewline } from 'vscode-chrome-debug-core/lib/src/utils';
 
 export function readJsonSync(file:string, def?:Object, forceCreate?:boolean):any
 {
