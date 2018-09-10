@@ -2,6 +2,7 @@
 * Add `publishDir` field in `nwjs.publish.json`
 * Add `reloadAfterAttached` field in `launch.json`
 * Set default debugger port to 9223 from 9222
+* Update to vscode-chrome-debug-core@6.7.11
 
 # 1.0.16
 * Fix specific platform debugging error

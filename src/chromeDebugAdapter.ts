@@ -215,7 +215,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
             */
            
-            if ((<ICommonRequestArgs>this._launchAttachArgs).reloadAfterAttached)
+            if ((<ICommonRequestArgs>this._launchAttachArgs).reloadAfterAttached !== false)
             {
                 this.chrome.Page.reload({});
             }
