@@ -6,6 +6,7 @@ import * as Core from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
+    webRoot?: string;
     disableNetworkCache?: boolean;
     urlFilter?: string;
     reloadAfterAttached?: boolean;
@@ -36,7 +37,7 @@ export interface ISetExpressionArgs {
     expression: string;
     value: string;
     frameId: number;
-    format?: DebugProtocol.ValueFormat
+    format?: DebugProtocol.ValueFormat;
     timeout?: number;
 }
 

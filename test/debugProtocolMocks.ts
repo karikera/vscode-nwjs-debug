@@ -5,19 +5,20 @@
 // Copied from -core because I don't want to include test stuff in the npm package
 
 import { EventEmitter } from 'events';
-import { Mock, It } from 'typemoq';
+import { Mock, It, IMock } from 'typemoq';
 import { Crdp } from 'vscode-chrome-debug-core';
 
 export interface IMockChromeConnectionAPI {
-    apiObjects: Crdp.CrdpClient;
+    apiObjects: Crdp.ProtocolApi;
 
-    Browser: Mock<Crdp.BrowserClient>;
-    Console: Mock<Crdp.ConsoleClient>;
-    Debugger: Mock<Crdp.DebuggerClient>;
-    Runtime: Mock<Crdp.RuntimeClient>;
-    Inspector: Mock<Crdp.InspectorClient>;
-    Network: Mock<Crdp.NetworkClient>;
-    Page: Mock<Crdp.PageClient>;
+    Browser: IMock<Crdp.BrowserApi>;
+    Console: IMock<Crdp.ConsoleApi>;
+    Debugger: IMock<Crdp.DebuggerApi>;
+    Runtime: IMock<Crdp.RuntimeApi>;
+    Inspector: IMock<Crdp.InspectorApi>;
+    Network: IMock<Crdp.NetworkApi>;
+    Page: IMock<Crdp.PageApi>;
+    Log: IMock<Crdp.LogApi>;
 
     mockEventEmitter: EventEmitter;
 }
@@ -32,7 +33,7 @@ function getBrowserStubs() {
 function getConsoleStubs() {
     return {
         enable() { },
-        onMessageAdded() { }
+        on(eventName, handler) { }
     };
 }
 
@@ -46,10 +47,7 @@ function getDebuggerStubs(mockEventEmitter) {
         setBlackboxPatterns() { return Promise.resolve(); },
         setAsyncCallStackDepth() { },
 
-        onPaused(handler) { mockEventEmitter.on('Debugger.paused', handler); },
-        onResumed(handler) { mockEventEmitter.on('Debugger.resumed', handler); },
-        onScriptParsed(handler) { mockEventEmitter.on('Debugger.scriptParsed', handler); },
-        onBreakpointResolved(handler) { mockEventEmitter.on('Debugger.breakpointResolved', handler); },
+        on(eventName, handler) { mockEventEmitter.on(`Debugger.${eventName}`, handler); }
     };
 }
 
@@ -65,68 +63,77 @@ function getRuntimeStubs(mockEventEmitter) {
         enable() { },
         evaluate() { },
 
-        onConsoleAPICalled(handler) { mockEventEmitter.on('Runtime.consoleAPICalled', handler); },
-        onExecutionContextsCleared(handler) { mockEventEmitter.on('Runtime.executionContextsCleared', handler); },
-        onExceptionThrown(handler) { mockEventEmitter.on('Runtime.onExceptionThrown', handler); }
+        on(eventName, handler) { mockEventEmitter.on(`Runtime.${eventName}`, handler); }
     };
 }
 
 function getInspectorStubs(mockEventEmitter) {
     return {
-        onDetached(handler) { mockEventEmitter.on('Inspector.detach', handler); }
+        on(eventName, handler) { mockEventEmitter.on(`Inspector.${eventName}`, handler); }
     };
 }
 
 function getPageStubs() {
     return {
         enable() { },
-        onFrameNavigated() { }
+        on(eventName, handler) { }
+    };
+}
+
+function getLogStubs() {
+    return {
+        enable() { return Promise.resolve(); },
+        on(eventName, handler) { }
     };
 }
 
 export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
     const mockEventEmitter = new EventEmitter();
 
-    const mockConsole = Mock.ofInstance<Crdp.ConsoleClient>(<any>getConsoleStubs());
+    const mockConsole = Mock.ofInstance<Crdp.ConsoleApi>(<any>getConsoleStubs());
     mockConsole.callBase = true;
     mockConsole
         .setup(x => x.enable())
         .returns(() => Promise.resolve());
 
-    const mockDebugger = Mock.ofInstance<Crdp.DebuggerClient>(<any>getDebuggerStubs(mockEventEmitter));
+    const mockDebugger = Mock.ofInstance<Crdp.DebuggerApi>(<any>getDebuggerStubs(mockEventEmitter));
     mockDebugger.callBase = true;
     mockDebugger
         .setup(x => x.enable())
         .returns(() => Promise.resolve(null));
 
-    const mockNetwork = Mock.ofInstance<Crdp.NetworkClient>(<any>getNetworkStubs());
+    const mockNetwork = Mock.ofInstance<Crdp.NetworkApi>(<any>getNetworkStubs());
     mockNetwork.callBase = true;
     mockNetwork
         .setup(x => x.enable(It.isAny()))
         .returns(() => Promise.resolve());
 
-    const mockRuntime = Mock.ofInstance<Crdp.RuntimeClient>(<any>getRuntimeStubs(mockEventEmitter));
+    const mockRuntime = Mock.ofInstance<Crdp.RuntimeApi>(<any>getRuntimeStubs(mockEventEmitter));
     mockRuntime.callBase = true;
     mockRuntime
         .setup(x => x.enable())
         .returns(() => Promise.resolve());
 
-    const mockInspector = Mock.ofInstance<Crdp.InspectorClient>(<any>getInspectorStubs(mockEventEmitter));
+    const mockInspector = Mock.ofInstance<Crdp.InspectorApi>(<any>getInspectorStubs(mockEventEmitter));
     mockInspector.callBase = true;
 
-    const mockPage = Mock.ofInstance<Crdp.PageClient>(<any>getPageStubs());
+    const mockPage = Mock.ofInstance<Crdp.PageApi>(<any>getPageStubs());
 
-    const mockBrowser = Mock.ofInstance<Crdp.BrowserClient>(<any>getBrowserStubs());
+    const mockBrowser = Mock.ofInstance<Crdp.BrowserApi>(<any>getBrowserStubs());
     mockBrowser.callBase = true;
 
-    const chromeConnectionAPI: Crdp.CrdpClient = <any>{
+    const mockLog = Mock.ofInstance<Crdp.LogApi>(<any>getLogStubs());
+    mockLog.callBase = true;
+
+    const chromeConnectionAPI: Crdp.ProtocolApi = <any>{
         Browser: mockBrowser.object,
         Console: mockConsole.object,
         Debugger: mockDebugger.object,
         Runtime: mockRuntime.object,
         Inspector: mockInspector.object,
         Network: mockNetwork.object,
-        Page: mockPage.object
+        Page: mockPage.object,
+        Log: mockLog.object
     };
 
     return {
@@ -139,6 +146,7 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
         Inspector: mockInspector,
         Network: mockNetwork,
         Page: mockPage,
+        Log: mockLog,
 
         mockEventEmitter
     };
