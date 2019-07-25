@@ -22,7 +22,7 @@
             "args": [
                 "-u", "tdd",
 				"--colors",
-				"out/test/**/*.test.js",
+				"out/test/*.test.js",
                 "--timeout", "1800000",
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js"]
@@ -38,6 +38,49 @@
                 "--colors",
                 "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
                 "${workspaceFolder}/out/test/int/*.test.js"
+            ],
+            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "frameworkTest",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+                "--timeout", "999999",
+                "--colors",
+                "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
+                "${workspaceFolder}/out/test/int/framework/*.test.js"
+            ],
+            "skipFiles": ["<node_internals>/**"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "debug integration test",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "env": {
+                "MSFT_TEST_DA_PORT": "4712",
+            },
+            "args": [
+                "--require", "source-map-support/register",
+                "-u", "tdd",
+                "--timeout", "999999",
+                "--colors",
+                "--grep", "Hit count breakpoint = 3 pauses on the button's 3rd click",
+                "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
+                "${workspaceFolder}/out/test/int/**/*.test.js",
+            ],
+            "skipFiles": [
+                "<node_internals>/**",
+                "methodCalledLogger.ts"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

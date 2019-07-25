@@ -2,11 +2,14 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as nls from 'vscode-nls';
+let localize = nls.loadMessageBundle();
+
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector, IOnPausedResult } from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector, IOnPausedResult, Version } from 'vscode-chrome-debug-core';
 import { spawn, ChildProcess, fork, execSync } from 'child_process';
 import { Crdp } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -17,9 +20,7 @@ import * as errors from './errors';
 import * as nfs from './util/nfs';
 import * as nwjs from './nwjs/nwjs';
 
-import * as nls from 'vscode-nls';
 import { FinishedStartingUpEventArguments } from 'vscode-chrome-debug-core/lib/src/executionTimingsReporter';
-let localize = nls.loadMessageBundle();
 
 // Keep in sync with sourceMapPathOverrides package.json default
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
@@ -55,7 +56,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         capabilities.supportsLogPoints = true;
 
         if (args.locale) {
-            localize = nls.config({ locale: args.locale })();
+            localize = nls.config({ locale: args.locale, bundleFormat: nls.BundleFormat.standalone })();
         }
 
         this._doesHostSupportLaunchUnelevatedProcessRequest = args.supportsLaunchUnelevatedProcessRequest || false;
@@ -123,6 +124,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Also start with extra stuff disabled
             // chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
             if (args.runtimeArgs) {
+                telemetryPropertyCollector.addTelemetryProperty('numberOfChromeCmdLineSwitchesBeingUsed', String(args.runtimeArgs.length));
                 chromeArgs.push(...args.runtimeArgs);
             }
 
@@ -236,11 +238,19 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         args.sourceMapPathOverrides = getSourceMapPathOverrides(args.webRoot, args.sourceMapPathOverrides);
         //args.skipFileRegExps = ['^chrome-extension:.*'];
 
+        if (args.targetTypes === undefined) {
+            args.targetFilter = utils.defaultTargetFilter;
+        } else {
+            args.targetFilter = utils.getTargetFilter(args.targetTypes);
+        }
+
+        args.smartStep = typeof args.smartStep === 'undefined' ? !this._isVSClient : args.smartStep;
+
         super.commonArgs(args);
     }
 
     protected doAttach(port: number, targetUrl?: string, address?: string, timeout?: number, websocketUrl?: string, extraCRDPChannelPort?: number): Promise<void> {
-        return super.doAttach(port, targetUrl, address, timeout, websocketUrl, extraCRDPChannelPort).then(() => {
+        return super.doAttach(port, targetUrl, address, timeout, websocketUrl, extraCRDPChannelPort).then(async () => {
             // Don't return this promise, a failure shouldn't fail attach
             this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
                 .then(
@@ -252,7 +262,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                         configDisableNetworkCache :
                         true;
 
-                    this.chrome.Network.setCacheDisabled({ cacheDisabled });
+                    this.chrome.Network.setCacheDisabled({ cacheDisabled }).catch(() => {
+                        // Ignore failure
+                    });
                 });
 
             const versionInformationPromise = this.chrome.Browser.getVersion().then(
@@ -301,6 +313,23 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                }
              */
             versionInformationPromise.then(versionInformation => telemetry.telemetry.reportEvent('target-version', versionInformation));
+
+            try {
+                if (this._breakOnLoadHelper) {
+                    // This is what -core is doing. We only actually care to see if this fails, to see if we need to apply the workaround
+                    const browserVersion = (await this._chromeConnection.version).browser;
+                    if (!browserVersion.isAtLeastVersion(0, 1)) { // If this is true it means it's unknown version
+                        logger.log(`/json/version failed, attempting workaround to get the version`);
+                        // If the original way failed, we try to use versionInformationPromise to get this information
+                        const versionInformation = await versionInformationPromise;
+                        const alternativeBrowserVersion = Version.parse(versionInformation['Versions.Target.Version']);
+                        this._breakOnLoadHelper.setBrowserVersion(alternativeBrowserVersion);
+                    }
+                }
+            } catch (exception) {
+                // If something fails we report telemetry and we ignore it
+                telemetry.telemetry.reportEvent('break-on-load-target-version-workaround-failed', exception);
+            }
 
             /* __GDPR__FRAGMENT__
                 "DebugCommonProperties" : {
@@ -356,7 +385,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
-                await this.killChromeOnWindows(this._chromePID);
+                this.killChromeOnWindows(this._chromePID);
             } else if (this._chromeProc) {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');

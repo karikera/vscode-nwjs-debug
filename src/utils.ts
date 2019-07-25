@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from 'path';
-import {utils as coreUtils, chromeConnection } from 'vscode-chrome-debug-core';
+import { utils as coreUtils, chromeConnection } from 'vscode-chrome-debug-core';
 
 export class DebounceHelper {
     private waitToken: any; // TS can't decide whether Timer or number...
@@ -36,5 +36,12 @@ export class DebounceHelper {
     }
 }
 
-export const targetFilter: chromeConnection.ITargetFilter =
-    target => target && (!target.type || target.type === 'page' || target.type === 'app');
+export const getTargetFilter = (targetTypes?: string[]): chromeConnection.ITargetFilter => {
+    if (targetTypes) {
+        return target => target && (!target.type || targetTypes.indexOf(target.type) !== -1);
+    }
+
+    return () => true;
+};
+
+export const defaultTargetFilter = getTargetFilter(['page', 'app']);

@@ -10,3 +10,7 @@ node_modules/
 typings/
 testapp/.vscode/chrome
 testapp/**/out/
+test-results.xml
+bin
+obj
+logs
