@@ -1,3 +1,8 @@
+# 1.0.18
+* Fix `NWJS Install` command
+* Fix launch without configuration
+* Update to vscode-chrome-debug-core@6.7.52
+
 # 1.0.17
 * Add `publishDir` field in `nwjs.publish.json`
 * Add `reloadAfterAttached` field in `launch.json`

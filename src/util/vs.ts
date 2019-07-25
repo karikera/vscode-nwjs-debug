@@ -7,7 +7,7 @@ const output = window.createOutputChannel("NWjs");
 export class ChannelStream extends stream.Writable
 {
     _buffer:string = '';
-    _flushReserved:number = 0;
+    _flushReserved:NodeJS.Timer = undefined;
     
     _flushToVsCode():void
     {
@@ -17,7 +17,7 @@ export class ChannelStream extends stream.Writable
             log(this._buffer);
             this._buffer = '';
         }
-        this._flushReserved = 0;
+        this._flushReserved = undefined;
     }
 
     end():void

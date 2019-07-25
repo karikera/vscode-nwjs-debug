@@ -13,7 +13,6 @@ import { defaultTargetFilter, getTargetFilter } from './utils';
 const localize = nls.loadMessageBundle();
 
 import * as fs from 'fs';
-import * as path from 'path';
 import globby = require('globby');
 
 import * as nwjs from './nwjs/nwjs';
@@ -59,25 +58,26 @@ async function installNWjs(version?:nwjs.VersionInfo):Promise<void>
 {
     if (!version)
     {
+        const prom = nwjs.listAll().then<nwjs.VersionInfo[]>(async(list)=>{
+            const have = await nwjs.list();
+            const haveset = new Set<string>();
+            for(const info of have)
+            {
+                haveset.add(info.versionText);
+            }
+            
+            for (const info of list)
+            {
+                if (haveset.has(info.versionText))
+                {
+                    info.description += ' (Installed)';
+                }
+            }
+            return list;
+        });
         version = await window.showQuickPick(
-            nwjs.listAll().then(async(list)=>{
-                const have = await nwjs.list();
-                const haveset = new Set<string>();
-                for(const info of have)
-                {
-                    haveset.add(info.versionText);
-                }
-                
-                for (const info of list)
-                {
-                    if (haveset.has(info.versionText))
-                    {
-                        info.description += ' (Installed)';
-                    }
-                }
-                return list;
-            }), 
-            {placeHolder: "Select install version"});
+            prom, 
+            {placeHolder: "Select install version", ignoreFocusOut: true});
         if (!version) return;
     }
     var downloaded = false;
@@ -198,7 +198,7 @@ async function publishNWjs():Promise<void>
 
     const targets = {};
     const bindir = 'bin';
-    const publishdir = config.publishDir;
+    const publishdir:string = config.publishDir;
     const packagejson = await nfs.readJson('package.json', DEFAULT_PACKAGE_JSON);
     if (!packagejson) throw new Error(NEED_PACKAGE_JSON);
 
@@ -352,9 +352,9 @@ function oncatch(err:Error):Thenable<void>
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('vscode-nwjs.toggleSkippingFile', toggleSkippingFile));
-    context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSmartStep', toggleSmartStep));
+    context.subscriptions.push(vscode.commands.registerCommand('vscode-nwjs.toggleSmartStep', toggleSmartStep));
 
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('chrome', new ChromeConfigurationProvider()));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('nwjs', new ChromeConfigurationProvider()));
     
     console.log('[extension: vscode-nwjs] activate');
     function regist(command:string, oncommand:()=>Promise<void>):void
@@ -418,11 +418,12 @@ export function deactivate() {
 }
 
 const DEFAULT_CONFIG = {
-    type: 'chrome',
+    type: 'nwjs',
     request: 'launch',
-    name: localize('chrome.launch.name', 'Launch Chrome against localhost'),
-    url: 'http://localhost:8080',
-    webRoot: '${workspaceFolder}'
+    name: 'Launch NWjs', // localize('chrome.launch.name', 'Launch NWjs'),
+    nwjsVersion: "any",
+    webRoot: '${workspaceFolder}',
+    reloadAfterAttached: true
 };
 
 export class ChromeConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -464,7 +465,6 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
         }
 
         resolveRemoteUris(folder, config);
-
         return config;
     }
 }

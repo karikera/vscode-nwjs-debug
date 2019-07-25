@@ -27,7 +27,7 @@
   "dependencies": {
     "vscode-chrome-debug-core": "^6.7.52",
     "vscode-debugadapter": "^1.32.1",
-    "vscode-nls": "^4.1.1"
+    "vscode-nls": "^4.1.1",
     "archiver": "^1.3.0",
     "co": "^4.6.0",
     "extract-zip": "^1.6.7",
@@ -41,12 +41,13 @@
     "user-home": "^2.0.0"
   },
   "devDependencies": {
+    "@types/archiver": "^0.15.37",
     "@types/chai": "^4.1.7",
     "@types/chai-string": "^1.4.1",
+    "@types/fs-extra": "^3.0.3",
+    "@types/globby": "^6.1.0",
     "@types/lodash": "^4.14.120",
     "@types/mocha": "^2.2.48",
-    "@types/archiver": "^0.15.37",
-    "@types/fs-extra": "^3.0.3",
     "@types/mockery": "^1.4.29",
     "@types/node": "^8.10.39",
     "@types/puppeteer": "^1.12.3",
@@ -55,7 +56,6 @@
     "chai": "^4.2.0",
     "chai-string": "^1.5.0",
     "concurrently": "^3.1.0",
-    "@types/globby": "^6.1.0",
     "del": "^3.0.0",
     "event-stream": "^3.3.4",
     "get-port": "^5.0.0",
@@ -65,8 +65,8 @@
     "gulp-tslint": "^8.1.3",
     "gulp-typescript": "^4.0.1",
     "gulp-util": "^3.0.8",
-    "http-server": "0.9.0",
-    "lodash": "^4.17.11",
+    "http-server": "^0.11.1",
+    "lodash": "^4.17.15",
     "minimist": "^1.2.0",
     "mocha": "^6.1.4",
     "mocha-junit-reporter": "^1.21.0",
@@ -90,7 +90,7 @@
   "main": "./out/src/extension",
   "activationEvents": [
     "onDebugInitialConfigurations",
-    "onDebugResolve:chrome",
+    "onDebugResolve:nwjs",
     "onCommand:vscode-nwjs.toggleSkippingFile",
     "onCommand:vscode-nwjs.toggleSmartStep",
     "onCommand:vscode-nwjs.install",
@@ -151,24 +151,6 @@
           "javascriptreact",
           "typescriptreact"
         ],
-        "initialConfigurations": [
-          {
-            "type": "nwjs",
-            "request": "launch",
-            "name": "Launch NWjs",
-            "nwjsVersion": "any",
-            "webRoot": "${workspaceFolder}",
-            "reloadAfterAttached": true
-          },
-          {
-            "type": "nwjs",
-            "request": "attach",
-            "name": "Attach to NWjs",
-            "port": 9222,
-            "webRoot": "${workspaceFolder}",
-            "reloadAfterAttached": true
-          }
-        ],
         "configurationSnippets": [
           {
             "label": "NWjs: Launch",
@@ -179,7 +161,7 @@
               "name": "Launch NWjs",
               "nwjsVersion": "any",
               "webRoot": "^\"${2:\\${workspaceFolder\\}}\"",
-              "reloadAfterAttached": false
+              "reloadAfterAttached": true
             }
           },
           {
@@ -191,7 +173,7 @@
               "name": "Attach to NWjs",
               "port": 9222,
               "webRoot": "^\"${2:\\${workspaceFolder\\}}\"",
-              "reloadAfterAttached": false
+              "reloadAfterAttached": true
             }
           }
         ],
@@ -489,7 +471,7 @@
           "when": "inDebugMode && debugType == 'nwjs' && callStackItemType == 'stackFrame'"
         },
         {
-          "command": "extension.nwjs.toggleSmartStep",
+          "command": "vscode-nwjs.toggleSmartStep",
           "group": "navigation",
           "when": "inDebugMode && debugType == 'nwjs' && callStackItemType == 'stackFrame'"
         }
@@ -517,8 +499,8 @@
         "title": "NWjs Compile"
       },
       {
-        "command": "extension.chrome-debug.toggleSmartStep",
-        "title": "%chrome.toggleSmartStep.title%"
+        "command": "vscode-nwjs.toggleSmartStep",
+        "title": "NWjs: Toggle Smart Step"
       }
     ],
     "keybindings": [
