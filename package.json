@@ -36,7 +36,7 @@
     "nwjs-versions": "^0.0.3",
     "nugget": "^1.6.0",
     "pify": "^2.3.0",
-    "shelljs": "^0.6.0",
+    "shelljs": "^0.8.5",
     "spawn-command": "0.0.2",
     "user-home": "^2.0.0"
   },
